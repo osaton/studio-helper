@@ -1,0 +1,36 @@
+{
+  "name": "studio-helper",
+  "version": "0.0.3",
+  "description": "Crasman Studio API Helper",
+  "main": "StudioHelper.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "studio-helper",
+    "studio",
+    "crasman",
+    "stage",
+    "crasman studio api"
+  ],
+  "author": "Petteri",
+  "dependencies": {
+    "bluebird": "^3.4.5",
+    "inquirer": "^1.1.3",
+    "mime-types": "^2.1.11",
+    "request": "^2.74.0"
+  },
+  "devDependencies": {
+    "jsdoc-to-markdown": "^2.0.0-alpha.15"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  }
+}
