@@ -28,9 +28,9 @@
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/osaton/studio-helper.git"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/osaton/studio-helper/issues"
   }
 }
