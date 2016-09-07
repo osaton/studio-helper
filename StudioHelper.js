@@ -599,7 +599,7 @@ class StudioHelper {
       // Add new files that are not yet uploaded
       for (let i = 0, l = localFiles.length; i < l; i++) {
         let fileName = localFiles[i],
-            fileInfo = this.getLocalFileInfo(path + '/' + fileName);
+            fileInfo = self.getLocalFileInfo(path + '/' + fileName);
 
         // Add file to be replaced
         fileUploadArray.push({
