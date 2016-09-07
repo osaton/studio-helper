@@ -3,6 +3,7 @@
 let request = require('request'),
     mime = require('mime-types'),
     Promise = require('bluebird'),
+    prompt = require('prompt'),
     fs = require('fs');
 
 Promise.longStackTraces();
@@ -41,7 +42,9 @@ class StudioHelper {
     this.apiUrl = 'https://' + settings.studio + API_URL;
     this.authToken = '';
 
-    this.inquirer = require('inquirer');
+    //this.inquirer = require('inquirer');
+
+    this.prompt = require('prompt');
 
     if (settings.proxy) {
       this.setProxy(settings.proxy);
@@ -50,6 +53,26 @@ class StudioHelper {
     if (settings.promptSchema) {
       this.promptSchema = settings.promptSchema;
     } else {
+      // Prompt schema
+      this.promptSchema = {
+        properties: {
+          name: {
+            description: 'Username',
+            required: true
+          },
+          password: {
+            description: 'Password',
+            hidden: true,
+            required: true
+          },
+          token: {
+            description: 'Yubikey token'
+          }
+        }
+      };
+
+      /*
+      // Inquirer schema
       this.promptSchema = [{
         message: 'Username',
         type: 'input',
@@ -62,7 +85,7 @@ class StudioHelper {
         message: 'Yubikey token',
         type: 'input',
         name: 'token'
-      }];
+      }];*/
     }
 
     if (settings.credentialsFile) {
@@ -360,8 +383,40 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
 
+      self.prompt.start();
       function showPrompt() {
 
+        prompt.get(self.promptSchema, function (err, result) {
+
+          if (!result) {
+            return;
+          }
+
+          return self.login(result.name, result.password, result.token, LONG_SESSION).then(function(res) {
+            if (res.status === 'ok') {
+
+              self._updateCredentials({
+                authToken: res.result.authToken,
+                username: result.name
+              });
+
+              self.setAuthToken(res.result.authToken);
+
+              resolve(res);
+            } else {
+
+              // Show error
+              self._log(res.result);
+
+              // And prompt again
+              //self.prompt.start();
+              showPrompt();
+              //self.prompt.stop();
+            }
+          });
+
+        });
+        /*
         self.inquirer.prompt(self.promptSchema).then(function(result) {
 
           if (!result) {
@@ -388,10 +443,11 @@ class StudioHelper {
               showPrompt();
             }
           });
-        });
+        });*/
       }
-
       showPrompt();
+
+      //self.prompt.stop();
     });
   }
 
