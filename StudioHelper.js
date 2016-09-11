@@ -133,26 +133,24 @@ class StudioHelper {
     return new Promise(function(resolve, reject) {
       return request.post(options, function(error, response, body) {
 
+        /*
         if (error) {
-
           resolve({
             status: 'error',
             networkError: error.code,
             result: 'Connection timeout'
           });
+        }*/
+
+        if (body && passAPIResponseHandling) {
+          resolve(JSON.parse(body));
         }
 
-        if (body) {
-          if (passAPIResponseHandling) {
-            resolve(JSON.parse(body));
-          } else {
-            return self._handleAPIResponse(JSON.parse(body), self._post, action, postData, customOptions).then(function(res) {
-              resolve(res);
-            }).catch(function(res) {
-              self._log(res.result);
-            });
-          }
-        }
+        return self._handleAPIResponse(error, body, self._post, action, postData, customOptions).then(function(res) {
+          resolve(res);
+        }).catch(function(res) {
+          self._log(res.result);
+        });
 
       }).form(postData);
     });
@@ -180,9 +178,9 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       request.put(options, function(error, response, body) {
-        let data = JSON.parse(body);
+        //let data = JSON.parse(body);
 
-        return self._handleAPIResponse(data, self._put, action, data).then(function(res) {
+        return self._handleAPIResponse(error, body, self._put, action, data).then(function(res) {
           resolve(res);
         }).catch(function(res) {
           self._log(res.result);
@@ -217,9 +215,8 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       request.get(options, function(error, response, body) {
-        let data = JSON.parse(body);
-
-        allArguments.unshift(data, self._get);
+        
+        allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
         }).catch(function(res) {
@@ -232,19 +229,31 @@ class StudioHelper {
   /**
    * @private
    */
-  _handleAPIResponse(results, lastCall) {
+  _handleAPIResponse(error, body, lastCall) {
 
     let self = this,
-        args = Array.prototype.slice.call(arguments);
+        args = Array.prototype.slice.call(arguments),
+        results;
+
+
+    if(error) {
+      results = {
+        'result': error,
+        'status': 'networkError'
+      }
+    } else {
+      results = JSON.parse(body);
+    }
+
+
+
 
     // Remove results and lastCall from arguments
-    args.splice(0, 2);
+    args.splice(0, 3);
 
     if (results.status === 'ok') {
       return Promise.resolve(results);
     }
-
-    
 
     switch (results.code) {
       case 1:
@@ -262,6 +271,11 @@ class StudioHelper {
         });
 
         break;
+    }
+
+    if(results.status === 'networkError') {
+      this.setProxy('');
+      return lastCall.apply(self, args);
     }
 
     return Promise.reject(results);
