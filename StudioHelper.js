@@ -273,7 +273,7 @@ class StudioHelper {
         break;
     }
 
-    if(results.status === 'networkError') {
+    if(results.status === 'networkError' && this.getProxy()) {
       this.setProxy('');
       return lastCall.apply(self, args);
     }
@@ -730,6 +730,10 @@ class StudioHelper {
 
   setAuthToken(token) {
     this.authToken = token;
+  }
+
+  getProxy() {
+    return this.proxy;
   }
 
   setProxy(proxy) {
