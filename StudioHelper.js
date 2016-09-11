@@ -244,8 +244,7 @@ class StudioHelper {
       return Promise.resolve(results);
     }
 
-    // Log results text if not successfull
-    self._log(results.result);
+    
 
     switch (results.code) {
       case 1:
@@ -253,6 +252,8 @@ class StudioHelper {
       case 17:
       case 19:
       case 18:
+        // Log results text if not successfull
+        self._log(results.result);
         if (!this.loginPromptEnabled) {
           return Promise.reject(results);
         }
@@ -262,6 +263,8 @@ class StudioHelper {
 
         break;
     }
+
+    return Promise.reject(results);
   }
 
   /**
