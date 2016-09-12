@@ -215,7 +215,7 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       request.get(options, function(error, response, body) {
-        
+
         allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
@@ -273,10 +273,12 @@ class StudioHelper {
         break;
     }
 
-    if(results.status === 'networkError' && this.getProxy()) {
-      this.setProxy('');
-      return lastCall.apply(self, args);
-    }
+
+    //Functionality disabled: Let's not assume user wants to connect without proxy
+    //if(results.status === 'networkError' && this.getProxy()) {
+    //  this.setProxy('');
+    //  return lastCall.apply(self, args);
+    //}
 
     return Promise.reject(results);
   }
