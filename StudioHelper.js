@@ -11,7 +11,7 @@ Promise.longStackTraces();
 const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = '900000',
       CREDENTIALS_FILE = '.studio-credentials',
-      IGNORE_FILE = '.studioignore',
+      IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
 
 /**
