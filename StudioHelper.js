@@ -4,7 +4,8 @@ let request = require('request'),
     mime = require('mime-types'),
     Promise = require('bluebird'),
     fs = require('fs'),
-    glob = require('glob');
+    path = require('path'),
+    ignore = require('ignore');
 
 Promise.longStackTraces();
 
@@ -45,6 +46,8 @@ class StudioHelper {
 
     this.inquirer = require('inquirer');
 
+    this.ignore = null;
+
     if (settings.proxy) {
       this.setProxy(settings.proxy);
     }
@@ -80,7 +83,10 @@ class StudioHelper {
     }
 
     this.credentials = this._getCredentials();
-    this.ignorePattern = this._getIgnorePattern();
+
+    if (this.ignoreFile) {
+      this._addToIgnore(this.ignoreFile);
+    }
 
     if (this.credentials && this.credentials.authToken) {
       this.setAuthToken(this.credentials.authToken);
@@ -117,18 +123,20 @@ class StudioHelper {
   /**
    * @private
    */
-  _getIgnorePattern() {
-    let pattern = null;
+  _addToIgnore(filePath) {
 
     try {
-      let patterns = fs.readFileSync(this.ignoreFile, 'utf-8').split(/\r?\n/).filter(Boolean);
-      if (patterns.length) {
-        pattern = `+(${patterns.join('|')})`;
+      if(!this.ignore) {
+        this.ignore = ignore();
       }
-    } catch (e) {
-    }
 
-    return pattern;
+      this.ignore.add(fs.readFileSync(filePath, 'utf-8').toString());
+
+      return true;
+    } catch(err) {
+
+    }
+    return false;
   }
 
   /**
@@ -783,15 +791,14 @@ class StudioHelper {
           files: []
         };
 
-        if (typeof this.ignorePattern === 'string') {
-          ignoredFiles = glob.sync(this.ignorePattern, {
-            cwd: folder.localFolder,
-            dot: true
-          });
-        }
-
         let localFiles = fs.readdirSync(folder.localFolder).filter(function(file) {
-          return ignoredFiles.indexOf(file) === -1;
+
+          // Filter out ignored files if any
+          if (self.ignore) {
+            return !!self.ignore.filter([path.join(folder.localFolder, file)]).length;
+          }
+
+          return true;
         });
 
         for (let j = 0, l2 = localFiles.length; j < l2; j++) {
