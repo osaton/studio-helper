@@ -3,13 +3,16 @@
 let request = require('request'),
     mime = require('mime-types'),
     Promise = require('bluebird'),
-    fs = require('fs');
+    fs = require('fs'),
+    path = require('path'),
+    ignore = require('ignore');
 
 Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = '900000',
       CREDENTIALS_FILE = '.studio-credentials',
+      IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
 
 /**
@@ -29,6 +32,7 @@ class StudioHelper {
    * @param {string}  [settings.proxy] - Proxy
    * @param {boolean} [settings.loginPromptEnabled=true] - Show login prompt if authentication fails
    * @param {string}  [settings.credentialsFile=.studio-credentials] - File in which credentials are saved
+   * @param {string}  [settings.ignoreFile=.studio-ignore] - Utilised by [push]{@link StudioHelper#push} method. Uses gitignore {@link https://git-scm.com/docs/gitignore|spec}
    */
   constructor(settings) {
     if (!settings) {
@@ -42,6 +46,8 @@ class StudioHelper {
     this.authToken = '';
 
     this.inquirer = require('inquirer');
+
+    this.ignore = null;
 
     if (settings.proxy) {
       this.setProxy(settings.proxy);
@@ -71,7 +77,17 @@ class StudioHelper {
       this.credentialsFile = CREDENTIALS_FILE;
     }
 
+    if (settings.ignoreFile) {
+      this.ignoreFile = settings.ignoreFile;
+    } else {
+      this.ignoreFile = IGNORE_FILE;
+    }
+
     this.credentials = this._getCredentials();
+
+    if (this.ignoreFile) {
+      this._addToIgnore(this.ignoreFile);
+    }
 
     if (this.credentials && this.credentials.authToken) {
       this.setAuthToken(this.credentials.authToken);
@@ -103,6 +119,25 @@ class StudioHelper {
     }
 
     return data;
+  }
+
+  /**
+   * @private
+   */
+  _addToIgnore(filePath) {
+
+    try {
+      if(!this.ignore) {
+        this.ignore = ignore();
+      }
+
+      this.ignore.add(fs.readFileSync(filePath, 'utf-8').toString());
+
+      return true;
+    } catch(err) {
+
+    }
+    return false;
   }
 
   /**
@@ -744,7 +779,8 @@ class StudioHelper {
 
   uploadFilesInFolders(folders) {
     let self = this,
-        foldersData = [];
+        foldersData = [],
+        ignoredFiles = [];
 
     for (let i = 0, l = folders.length; i < l; i++) {
       try {
@@ -756,7 +792,15 @@ class StudioHelper {
           files: []
         };
 
-        let localFiles = fs.readdirSync(folders[i].localFolder);
+        let localFiles = fs.readdirSync(folder.localFolder).filter(function(file) {
+
+          // Filter out ignored files if any
+          if (self.ignore) {
+            return !!self.ignore.filter([path.join(folder.localFolder, file)]).length;
+          }
+
+          return true;
+        });
 
         for (let j = 0, l2 = localFiles.length; j < l2; j++) {
           let itemStat = fs.lstatSync(folder.localFolder + '/' + localFiles[j]);
