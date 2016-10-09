@@ -3,13 +3,15 @@
 let request = require('request'),
     mime = require('mime-types'),
     Promise = require('bluebird'),
-    fs = require('fs');
+    fs = require('fs'),
+    glob = require('glob');
 
 Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = '900000',
       CREDENTIALS_FILE = '.studio-credentials',
+      IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
 
 /**
@@ -71,7 +73,14 @@ class StudioHelper {
       this.credentialsFile = CREDENTIALS_FILE;
     }
 
+    if (settings.ignoreFile) {
+      this.ignoreFile = settings.ignoreFile;
+    } else {
+      this.ignoreFile = IGNORE_FILE;
+    }
+
     this.credentials = this._getCredentials();
+    this.ignorePattern = this._getIgnorePattern();
 
     if (this.credentials && this.credentials.authToken) {
       this.setAuthToken(this.credentials.authToken);
@@ -103,6 +112,23 @@ class StudioHelper {
     }
 
     return data;
+  }
+
+  /**
+   * @private
+   */
+  _getIgnorePattern() {
+    let pattern = null;
+
+    try {
+      let patterns = fs.readFileSync(this.ignoreFile, 'utf-8').split(/\r?\n/).filter(Boolean);
+      if (patterns.length) {
+        pattern = `+(${patterns.join('|')})`;
+      }
+    } catch (e) {
+    }
+
+    return pattern;
   }
 
   /**
@@ -744,7 +770,8 @@ class StudioHelper {
 
   uploadFilesInFolders(folders) {
     let self = this,
-        foldersData = [];
+        foldersData = [],
+        ignoredFiles = [];
 
     for (let i = 0, l = folders.length; i < l; i++) {
       try {
@@ -756,7 +783,16 @@ class StudioHelper {
           files: []
         };
 
-        let localFiles = fs.readdirSync(folders[i].localFolder);
+        if (typeof this.ignorePattern === 'string') {
+          ignoredFiles = glob.sync(this.ignorePattern, {
+            cwd: folder.localFolder,
+            dot: true
+          });
+        }
+
+        let localFiles = fs.readdirSync(folder.localFolder).filter(function(file) {
+          return ignoredFiles.indexOf(file) === -1;
+        });
 
         for (let j = 0, l2 = localFiles.length; j < l2; j++) {
           let itemStat = fs.lstatSync(folder.localFolder + '/' + localFiles[j]);
