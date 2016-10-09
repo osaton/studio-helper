@@ -32,7 +32,7 @@ class StudioHelper {
    * @param {string}  [settings.proxy] - Proxy
    * @param {boolean} [settings.loginPromptEnabled=true] - Show login prompt if authentication fails
    * @param {string}  [settings.credentialsFile=.studio-credentials] - File in which credentials are saved
-   * @param {string}  [settings.ignoreFile=.studio-ignore] - Uses gitignore {@link https://git-scm.com/docs/gitignore|spec}
+   * @param {string}  [settings.ignoreFile=.studio-ignore] - Utilised by [push]{@link StudioHelper#push} method. Uses gitignore {@link https://git-scm.com/docs/gitignore|spec}
    */
   constructor(settings) {
     if (!settings) {
