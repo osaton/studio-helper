@@ -25,9 +25,6 @@ describe('StudioHelper', function() {
         studio: 'helper.studio.crasman.fi'
       });
 
-
-      //touchFiles(['folders/testfolder1', 'folders/testfolder2']);
-      console.log(getFolder('folders/testfolder1'));
       return studio.push({
         folders: [{
           folderId: '57fa91c86c6e79d9761b0a4e',
