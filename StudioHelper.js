@@ -264,6 +264,42 @@ class StudioHelper {
   /**
    * @private
    */
+  _delete(action) {
+    let options = {
+          url: '',
+          proxy: this.proxy,
+          headers: {
+            'X-authToken': this.authToken
+          }
+        },
+        args = Array.prototype.slice.call(arguments),
+        allArguments = Array.prototype.slice.call(arguments),
+        self = this;
+
+    if (!action) {
+      throw Error('Site#_post: action not set');
+    }
+
+    args.shift();
+
+    options.url = this.apiUrl + action + '/' + args.join('/');
+
+    return new Promise(function(resolve, reject) {
+      request.delete(options, function(error, response, body) {
+
+        allArguments.unshift(error, body, self._get);
+        return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
+          resolve(res);
+        }).catch(function(res) {
+          self._log(res.result);
+        });
+      });
+    });
+  }
+
+  /**
+   * @private
+   */
   _handleAPIResponse(error, body, lastCall) {
 
     let self = this,
@@ -762,6 +798,53 @@ class StudioHelper {
         });
       });
     }
+  }
+
+  /**
+   * Delete folder
+   *
+   * @param {string} folderId
+   * @return {Promise<Object>}
+   */
+  deleteFolder(folderId) {
+    return this._delete('folders', folderId);
+  }
+
+  /**
+   * Delete child folders of a given folder
+   *
+   * @param {string} folderId
+   * @return {Promise<Object>}
+   */
+  deleteChildFolders(folderId) {
+    let self = this;
+
+    return this.getFolders(folderId).then(function (res) {
+      let folders = res.result;
+
+      return Promise.resolve(folders).mapSeries(function(folder) {
+        return self.deleteFolder(folder.id);
+      });
+    }).then(function (res) {
+      let resArr = self._flattenArray(res);
+      let resObj;
+      // Check that all delete actions are ok
+      for(let i=0, l=resArr.length; i<l; i++) {
+        if(resArr[i] !== 'ok') {
+          return Promise.resolve({
+            status: 'error',
+            result: false,
+            code: -1
+          });
+        }
+      }
+
+      return Promise.resolve({
+        status: 'ok',
+        result: true,
+        code: 0
+      });
+    })
   }
 
   /**
