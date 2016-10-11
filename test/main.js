@@ -8,6 +8,10 @@ function getFolder(folderPath) {
   return path.join(__dirname, folderPath);
 }
 
+function DefaultStudio() {
+
+}
+
 describe('StudioHelper', function() {
   this.timeout(0);
 
@@ -17,6 +21,23 @@ describe('StudioHelper', function() {
     });
 
     studio.should.be.an.instanceOf(StudioHelper);
+  });
+
+  describe('#createFolder', function () {
+    it('should create folder', function (done) {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      studio.createFolder({
+        parentFolder: null,
+        name: 'test'
+      }).then(function (res) {
+        if(res.status === 'ok') {
+          done();
+        }
+      });
+    });
   });
 
   describe('#push', function () {

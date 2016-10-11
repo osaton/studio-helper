@@ -720,6 +720,25 @@ class StudioHelper {
   }
 
   /**
+   * Create folder
+   *
+   * @param {Object} settings
+   * @param {Object<string>} [settings.parentId] - Studio folder in which we want to create the new folder
+   * @param {Object<string>} [settings.name] - Name of the new folder
+   * @return {Promise<Object>}
+   */
+  createFolder(settings) {
+    let parentId = settings.parentId || '';
+    let folderName = settings.name;
+
+    let path = 'folders/' + parentId;
+
+    return this._post(path, {
+      name: folderName
+    });
+  }
+
+  /**
    * Batch upload/replace files
    *
    * /// Private for now
