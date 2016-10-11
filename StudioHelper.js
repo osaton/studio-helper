@@ -284,8 +284,6 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
-    console.log(options);
-    
     return new Promise(function(resolve, reject) {
       request.delete(options, function(error, response, body) {
 
@@ -554,10 +552,8 @@ class StudioHelper {
       let resArr = res;
       let resObj;
 
-      console.log(resArr);
       // Check that all delete actions are ok
       for(let i=0, l=resArr.length; i<l; i++) {
-        console.log(resArr[i]);
         if(resArr[i].result === false) {
           return Promise.resolve({
             status: 'error',

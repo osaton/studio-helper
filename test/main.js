@@ -115,16 +115,13 @@ describe('StudioHelper', function() {
         studio: 'helper.studio.crasman.fi'
       });
 
-      console.log('push before');
       return Promise.resolve([testFolder1, testFolder2]).mapSeries(function(folder) {
-        console.log(folder);
         return studio.getFiles(folder).then(function (files) {
           let fileIds = [];
 
           for(let i=0, l=files.length; i<l; i++) {
             fileIds.push(files[i].id);
           }
-          console.log(fileIds);
           return studio.deleteFiles(fileIds);
         });
       }).then(function (res) {
@@ -146,7 +143,6 @@ describe('StudioHelper', function() {
           localFolder: getFolder('folders/testfolder2')
         }]
       }).then(function (res) {
-        console.log(res);
         return res.should.have.lengthOf(6);
       })
     });
@@ -167,7 +163,6 @@ describe('StudioHelper', function() {
 
         fileIds.length.should.be.above(0);
         return studio.deleteFiles(fileIds).then(function (res) {
-          console.log(res);
           return res.result.should.equal(true);
         });
       })
