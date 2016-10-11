@@ -284,6 +284,8 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
+    console.log(options);
+    
     return new Promise(function(resolve, reject) {
       request.delete(options, function(error, response, body) {
 
@@ -510,6 +512,12 @@ class StudioHelper {
     return this.uploadFilesInFolders(settings.folders);
   }
 
+  /**
+   * Get files of a folder
+   *
+   * @param {string} folderId - Studio folder id
+   * @return {Promise<Array<Object>>}
+   **/
   getFiles(folderId) {
     let self = this;
 
@@ -526,6 +534,43 @@ class StudioHelper {
         }
 
         resolve(res.result);
+      });
+    });
+  }
+
+  /**
+   * Delete files
+   *
+   * @param {Array<string>} files - Array of file ids
+   * @return {Promise<Object>}
+   **/
+  deleteFiles(files) {
+    let self = this;
+
+    return Promise.resolve(files).mapSeries(function(file) {
+      //return self._delete('file', file);
+      return self._delete('file', file);
+    }).then(function (res) {
+      let resArr = res;
+      let resObj;
+
+      console.log(resArr);
+      // Check that all delete actions are ok
+      for(let i=0, l=resArr.length; i<l; i++) {
+        console.log(resArr[i]);
+        if(resArr[i].result === false) {
+          return Promise.resolve({
+            status: 'error',
+            result: false,
+            code: -1
+          });
+        }
+      }
+
+      return Promise.resolve({
+        status: 'ok',
+        result: true,
+        code: 0
       });
     });
   }
