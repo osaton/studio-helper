@@ -2,7 +2,8 @@
 
 const should = require('should'),
       StudioHelper = require('../StudioHelper'),
-      path = require('path');
+      path = require('path'),
+      mainFolder = '57fd20b96c6e79438855b47f';
 
 function getFolder(folderPath) {
   return path.join(__dirname, folderPath);
@@ -24,18 +25,55 @@ describe('StudioHelper', function() {
   });
 
   describe('#createFolder', function () {
-    it('should create folder', function (done) {
+    it('should create folder', function () {
       let studio = new StudioHelper({
         studio: 'helper.studio.crasman.fi'
       });
 
-      studio.createFolder({
-        parentFolder: null,
-        name: 'test'
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'createFolderTest'
       }).then(function (res) {
-        if(res.status === 'ok') {
+        return res.status.should.equal('ok');
+      });
+    });
+
+    it('should not create new folder if settings.addIfExists: false ', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'createFolderTest-AddIfExists'
+      }).then(function (res) {
+        let addedFolderId = res.result;
+        return studio.createFolder({
+          parentId: mainFolder,
+          name: 'createFolderTest-AddIfExists',
+          addIfExists: false
+        }).then(function (res) {
+          console.log('in test');
+          console.log(res);
+          // Should return the already created folder
+          return addedFolderId.should.equal(res.result.id);
+        });
+      });
+    });
+  });
+
+  describe('#getFolders', function () {
+    it('should get folders', function (done) {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      studio.getFolders(mainFolder).then(function (res) {
+        console.log(res);
+        if(res.status === 'ok' && Array.isArray(res.result)) {
           done();
         }
+        //return res.status.should.equal('ok');
       });
     });
   });

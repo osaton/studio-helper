@@ -725,17 +725,53 @@ class StudioHelper {
    * @param {Object} settings
    * @param {Object<string>} [settings.parentId] - Studio folder in which we want to create the new folder
    * @param {Object<string>} [settings.name] - Name of the new folder
+   * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
    * @return {Promise<Object>}
    */
   createFolder(settings) {
     let parentId = settings.parentId || '';
     let folderName = settings.name;
-
+    let addIfExists = settings.addIfExists === false ? false : true;
     let path = 'folders/' + parentId;
 
-    return this._post(path, {
-      name: folderName
-    });
+    if(addIfExists) {
+      return this._post(path, {
+        name: folderName
+      });
+    } else {
+      let self = this;
+
+      return this.getFolders(parentId).then(function (res) {
+        let folders = res.result;
+
+        // Return folder data if found
+        for(let i=0, l=folders.length; i<l; i++) {
+          let folder = folders[i];
+          if(folder.name === folderName) {
+            return Promise.resolve({
+              status: 'ok',
+              code: 0,
+              result: folder.id
+            });
+          }
+        }
+
+        // If not found, create normally
+        return self._post(path, {
+          name: folderName
+        });
+      });
+    }
+  }
+
+  /**
+   * Get folders
+   *
+   * @param {string} [parentId] - Parent folder id
+   * @return {Promise<Object>}
+   */
+  getFolders(parentId) {
+    return this._get('folders', parentId);
   }
 
   /**
