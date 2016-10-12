@@ -27,6 +27,27 @@ describe('StudioHelper', function() {
     studio.should.be.an.instanceOf(StudioHelper);
   });
 
+  describe('#getUploadInformation', function () {
+    it('should return information needed for upload', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
+      let uploadFiles = studio.getUploadInformation(files, 'someMadeUpFolder');
+
+      uploadFiles.length.should.equal(2);
+      uploadFiles[0].should.have.property('action', 'upload');
+      uploadFiles[0].should.have.property('name').which.is.a.String();
+      uploadFiles[0].should.have.property('name').which.is.a.String();
+      uploadFiles[0].should.have.property('localFolder').which.is.a.String();
+      uploadFiles[0].should.have.property('type').which.is.a.String();
+      uploadFiles[0].should.have.property('sha1').which.is.a.String();
+      uploadFiles[0].should.have.property('data').which.is.an.instanceOf(Buffer);
+      uploadFiles[0].folderId.should.equal('someMadeUpFolder');
+    });
+  })
+
   describe('#deleteChildFolders', function () {
     it('should delete child folders of a given folderid', function () {
       let studio = new StudioHelper({
@@ -143,7 +164,7 @@ describe('StudioHelper', function() {
           localFolder: getFolder('folders/testfolder2')
         }]
       }).then(function (res) {
-        return res.should.have.lengthOf(6);
+        return res.should.have.lengthOf(4);
       })
     });
   });
@@ -167,6 +188,50 @@ describe('StudioHelper', function() {
         });
       })
 
+    });
+  });
+
+  describe('#uploadFiles', function () {
+    let uploadFilesFolderId;
+
+    before(function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'uploadFilesTest'
+      }).then(function (res) {
+        uploadFilesFolderId = res.result;
+
+        Promise.resolve(res);
+      });
+    });
+
+    it('should upload files to specific folder', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+
+      let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
+
+      return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
+        res.should.have.lengthOf(2);
+        res[0].status.should.equal('ok');
+        return res[1].status.should.equal('ok');
+      });
+    });
+
+    after(function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
+        return Promise.resolve(res);
+      });
     });
   });
 });

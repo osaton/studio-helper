@@ -168,15 +168,6 @@ class StudioHelper {
     return new Promise(function(resolve, reject) {
       return request.post(options, function(error, response, body) {
 
-        /*
-        if (error) {
-          resolve({
-            status: 'error',
-            networkError: error.code,
-            result: 'Connection timeout'
-          });
-        }*/
-
         if (body && passAPIResponseHandling) {
           resolve(JSON.parse(body));
         }
@@ -315,9 +306,6 @@ class StudioHelper {
     } else {
       results = JSON.parse(body);
     }
-
-
-
 
     // Remove results and lastCall from arguments
     args.splice(0, 3);
@@ -587,6 +575,9 @@ class StudioHelper {
     };
   }
 
+  /**
+   * @private
+   */
   uploadFile(folderId, fileName, fileType, fileSize, sha1, fileData, localFolder) {
     let self = this;
 
@@ -641,6 +632,86 @@ class StudioHelper {
     });
   }
 
+  /**
+   * Get required information about files for upload
+   *
+   * @param {Array<string>} files - files with paths
+   * @param {string} folderId - Studio folder id
+   * @return {Array<Object>} Array of file information objects
+   */
+  getUploadInformation(files, folderId) {
+    let uploadReadyFiles = [];
+
+    for (let i = 0, l = files.length; i < l; i++) {
+      let filePath = path.dirname(files[i]),
+          fileName = path.basename(files[i]),
+          fileInfo = this.getLocalFileInfo(filePath + '/' + fileName);
+
+      // Add file to be replaced
+      uploadReadyFiles.push({
+        action: 'upload',
+        name: fileName,
+        folderId: folderId,
+        localFolder: filePath,
+        type: fileInfo.type,
+        size: fileInfo.size,
+        sha1: fileInfo.sha1,
+        data: fileInfo.data
+      });
+    }
+
+    return uploadReadyFiles;
+  }
+
+  /**
+   * Upload files to a specified folder
+   *
+   * @param  {Array<string>} files - file with path
+   * @param  {string} folderId - Studio folder id
+   * @return {Promise<Array<Object>>}
+   */
+  uploadFiles(files, folderId) {
+
+    if(!folderId) {
+      throw Error('StudioHelper#uploadFiles: folderId not set');
+    }
+
+    let uploadFiles = this.getUploadInformation(files, folderId);
+
+    return this.batchUpload(uploadFiles);
+
+    //let uploadFiles = this.getUploadInformation(files);
+    /*
+    for (let i = 0, l = localFiles.length; i < l; i++) {
+      let fileName = localFiles[i],
+          fileInfo = self.getLocalFileInfo(path + '/' + fileName);
+
+      // Add file to be replaced
+      fileUploadArray.push({
+        action: 'upload',
+        name: fileName,
+        folderId: studioFolderId,
+        localFolder: path,
+        type: fileInfo.type,
+        size: fileInfo.size,
+        sha1: fileInfo.sha1,
+        data: fileInfo.data
+      });
+    }*/
+  }
+  _uploadChanged(folderId, files, path) {
+    let self = this;
+
+    return new Promise(function(resolve, reject) {
+      return self.getFiles(folderId).then(function(studioFiles) {
+        return self.getChangedFiles(studioFiles, files, path, folderId).then(function(changedFiles) {
+          return self.batchUpload(changedFiles).then(function(res) {
+            resolve(res);
+          });
+        });
+      });
+    });
+  }
   /**
    * Login
    *
@@ -910,7 +981,6 @@ class StudioHelper {
    */
 
   batchUpload(files) {
-
     let self = this;
 
     let processAll = Promise.resolve(files).mapSeries(function(file) {
