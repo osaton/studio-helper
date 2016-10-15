@@ -430,6 +430,67 @@ class StudioHelper {
     });
   }
 
+  _createDirFolders(folderData, dataArray) {
+    let self = this;
+    let localFolders = self.getLocalFolders(folderData.localFolder);
+    let folderJobs = [];
+
+    for(let i=0, l=localFolders.length; i<l; i++) {
+      folderJobs.push(this.createFolder({
+        parentId: folderData.folderId,
+        name: localFolders[i],
+        localFolder: folderData.localFolder,
+        addIfExists: false
+      }));
+    }
+
+    return Promise.all(folderJobs).then(function (res) {
+      if(res.length) {
+        self._createDirFoldersData = self._createDirFoldersData.concat(res);
+      }
+
+      if(folderData.includeSubFolders && res.length) {
+        let folderJobs = [];
+
+        for(let i=0, l=res.length; i<l; i++) {
+          let folder = res[i].result;
+
+          folderJobs.push(self._createDirFolders({
+            folderId: folder.id,
+            localFolder: path.join(folderData.localFolder, folder.name),
+            includeSubFolders: true
+          }, dataArray));
+        }
+
+        //return Promise.resolve(dirCreateData);
+        return Promise.all(folderJobs);
+      } else {
+        return Promise.resolve(dataArray);
+      }
+    }).then(function () {
+      return Promise.resolve(dataArray);
+    });
+  }
+
+  /**
+   * Create folders found in local directory if not already created
+   *
+   * @private
+   *
+   *
+   * @param {string} folders[].folderId - Studio folder id
+   * @param {string} folders[].localFolder - Local folder path
+   * @param {boolean} folders[].includeSubFolders
+   */
+  createDirectoryFolders(folderData) {
+    let self = this;
+    this._createDirFoldersData = [];
+    return this._createDirFolders(folderData, this._createDirFoldersData).then(function (res) {
+      return Promise.resolve(self._createDirFoldersData);
+    });
+  }
+
+
   /**
    * @private
    */
@@ -470,6 +531,19 @@ class StudioHelper {
       }
 
       showPrompt();
+    });
+  }
+
+  /**
+   * Get local directory folders
+   *
+   * @param {string} path
+   * @return {Array<string>} folders
+   */
+
+  getLocalFolders(srcpath) {
+    return fs.readdirSync(srcpath).filter(function(file) {
+      return fs.statSync(path.join(srcpath, file)).isDirectory();
     });
   }
 
@@ -874,17 +948,36 @@ class StudioHelper {
    * @param {Object<string>} [settings.parentId] - Studio folder in which we want to create the new folder
    * @param {Object<string>} [settings.name] - Name of the new folder
    * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
+   * @param {Object<string>} [settings.localFolder] - local folder path
    * @return {Promise<Object>}
    */
   createFolder(settings) {
     let parentId = settings.parentId || '';
     let folderName = settings.name;
+    let localFolderPath = settings.localFolder || '';
     let addIfExists = settings.addIfExists === false ? false : true;
-    let path = 'folders/' + parentId;
+    let apipath = 'folders/' + parentId;
 
     if(addIfExists) {
-      return this._post(path, {
+      return this._post(apipath, {
         name: folderName
+      }).then(function (res) {
+        let resData;
+        if(res.status === 'ok') {
+          resData = {
+            status: 'ok',
+            code: 0,
+            result: {
+              id: res.result,
+              name: folderName,
+              localFolder: path.join(localFolderPath, folderName)
+            }
+          };
+        } else {
+          resData = res;
+        }
+
+        return Promise.resolve(resData);
       });
     } else {
       let self = this;
@@ -899,14 +992,36 @@ class StudioHelper {
             return Promise.resolve({
               status: 'ok',
               code: 0,
-              result: folder.id
+              result: {
+                id: folder.id,
+                name: folderName,
+                localFolder: path.join(localFolderPath, folderName)
+              }
             });
           }
         }
 
         // If not found, create normally
-        return self._post(path, {
+        return self._post(apipath, {
           name: folderName
+        }).then(function (res) {
+          let resData;
+
+          if(res.status === 'ok') {
+            resData = {
+              status: 'ok',
+              code: 0,
+              result: {
+                id: res.result,
+                name: folderName,
+                localFolder: path.join(localFolderPath, folderName)
+              }
+            };
+          } else {
+            resData = res;
+          }
+
+          return Promise.resolve(resData);
         });
       });
     }
