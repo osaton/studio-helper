@@ -27,6 +27,13 @@ const API_URL = '/studioapi/v2/',
 class StudioHelper {
 
   /**
+   * @typedef {Object} ResultObj
+   * @property {string} status Status
+   * @property {number} code 0 for success
+   * @property {string|Object} result Results
+   */
+
+  /**
    * @param {Object}  settings
    * @param {string}  settings.studio - Studio host ('xyz.studio.crasman.fi')
    * @param {string}  [settings.proxy] - Proxy
@@ -478,13 +485,13 @@ class StudioHelper {
 
   /**
    * Create folders found in local directory if not already created
-   * @async
+   * @async Returns Promise
    * @param {Object} folderData
    * @param {string} folderData.folderId - Studio folder id
    * @param {string} folderData.localFolder - Local folder path
    * @param {boolean} [folderData.includeSubFolders=false] - Create sub folders
    * @param {boolean} [folderData.cache=true] - Cache results
-   * @return {Promise.<Folders>} A promise
+   * @returns {ResultObj[]} [ResultObj.result]{@link CreateFolderResult}
    */
   createDirectoryFolders(folderData) {
     let self = this;
@@ -592,6 +599,7 @@ class StudioHelper {
   /**
    * Get files of a folder
    *
+   * @private for now
    * @param {string} folderId - Studio folder id
    * @return {Promise<Array<Object>>}
    **/
@@ -618,6 +626,7 @@ class StudioHelper {
   /**
    * Delete files
    *
+   * @private for now
    * @param {Array<string>} files - Array of file ids
    * @return {Promise<Object>}
    **/
@@ -726,6 +735,7 @@ class StudioHelper {
   /**
    * Get required information about files for upload
    *
+   * @private for now
    * @param {Array<string>} files - files with paths
    * @param {string} folderId - Studio folder id
    * @return {Array<Object>} Array of file information objects
@@ -756,7 +766,7 @@ class StudioHelper {
 
   /**
    * Upload files to a specified folder
-   *
+   * @private for now
    * @param  {Array<string>} files - file with path
    * @param  {string} folderId - Studio folder id
    * @return {Promise<Array<Object>>}
@@ -959,31 +969,22 @@ class StudioHelper {
   }
 
   /**
-   * @typedef {Object} FolderData
+   * @typedef {Object} CreateFolderResult
    * @property {string} id Created folder id
    * @property {string} name Local folder name, might be different in Studio
    * @property {string} localFolder Local folder path
    */
-  /**
-   * @typedef {Object} Folder
-   * @property {string} status Status
-   * @property {number} code 0 for success, -1 for error
-   * @property {FolderData} result Results data
-   */
 
   /**
-   * @typedef {Folder[]} Folders
-   */
-  /**
    * Create folder
-   *
+   * @async Returns a promise
    * @param {Object} settings
    * @param {Object<string>} [settings.parentId] - Studio folder in which we want to create the new folder
    * @param {Object<string>} [settings.name] - Name of the new folder
    * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
    * @param {Object<string>} [settings.localFolder] - local folder path
    * @param {Object<boolean>} [settings.logCreated=false] - log created folders
-   * @return {Promise.<FolderResObj>} A promise
+   * @returns {ResultObj} [ResultObj.result]{@link CreateFolderResult}
    */
   createFolder(settings) {
     let self = this;
@@ -1075,6 +1076,7 @@ class StudioHelper {
   /**
    * Delete folder
    *
+   * @private for now
    * @param {string} folderId
    * @return {Promise<Object>}
    */
@@ -1085,6 +1087,7 @@ class StudioHelper {
   /**
    * Delete child folders of a given folder
    *
+   * @private for now
    * @param {string} folderId
    * @return {Promise<Object>}
    */
@@ -1122,6 +1125,7 @@ class StudioHelper {
   /**
    * Get folders
    *
+   * @private for now
    * @param {string} [parentId] - Parent folder id
    * @return {Promise<Object>}
    */
@@ -1132,9 +1136,7 @@ class StudioHelper {
   /**
    * Batch upload/replace files
    *
-   * /// Private for now
-   *
-   * @private
+   * @private for now
    *
    * @param  {Array<object>} files
    * @return {Array<object>} result
