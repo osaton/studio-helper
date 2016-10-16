@@ -410,13 +410,12 @@ class StudioHelper {
    * @private
    */
   _flattenArray(arr) {
-    var flatArray = [];
-    for (let i = 0, l = arr.length; i < l; i++) {
-      if (Array.isArray(arr[i])) {
-        flatArray = flatArray.concat(arr[i]);
-      }
-    }
-    return flatArray;
+    let self = this;
+
+    return arr.reduce(function(memo, el) {
+      let items = Array.isArray(el) ? self._flattenArray(el) : [el];
+      return memo.concat(items);
+    }, []);
   }
 
   /**
@@ -430,10 +429,11 @@ class StudioHelper {
     });
   }
 
-  _createDirFolders(folderData, dataArray) {
+  _createDirFolders(folderData, parentData) {
     let self = this;
     let localFolders = self.getLocalFolders(folderData.localFolder);
     let folderJobs = [];
+    let treeData = parentData || [];
 
     for(let i=0, l=localFolders.length; i<l; i++) {
       folderJobs.push(this.createFolder({
@@ -444,31 +444,35 @@ class StudioHelper {
       }));
     }
 
-    return Promise.all(folderJobs).then(function (res) {
-      if(res.length) {
-        self._createDirFoldersData = self._createDirFoldersData.concat(res);
-      }
-
-      if(folderData.includeSubFolders && res.length) {
+    return Promise.all(folderJobs).then(function (parentRes) {
+      if(folderData.includeSubFolders && parentRes.length) {
         let folderJobs = [];
 
-        for(let i=0, l=res.length; i<l; i++) {
-          let folder = res[i].result;
-
+        for(let i=0, l=parentRes.length; i<l; i++) {
+          let folder = parentRes[i].result;
           folderJobs.push(self._createDirFolders({
             folderId: folder.id,
             localFolder: path.join(folderData.localFolder, folder.name),
             includeSubFolders: true
-          }, dataArray));
+          }));
         }
 
-        //return Promise.resolve(dirCreateData);
-        return Promise.all(folderJobs);
+        if(folderJobs.length) {
+
+          // Create child folders
+          return Promise.all(folderJobs).then(function (childRes) {
+
+            // and concat results with parent data
+            parentRes = parentRes.concat(childRes);
+            return Promise.resolve(parentRes);
+          });
+        } else {
+          return Promise.resolve(parentRes);
+        }
+
       } else {
-        return Promise.resolve(dataArray);
+        return Promise.resolve(parentRes);
       }
-    }).then(function () {
-      return Promise.resolve(dataArray);
     });
   }
 
@@ -484,9 +488,9 @@ class StudioHelper {
    */
   createDirectoryFolders(folderData) {
     let self = this;
-    this._createDirFoldersData = [];
+
     return this._createDirFolders(folderData, this._createDirFoldersData).then(function (res) {
-      return Promise.resolve(self._createDirFoldersData);
+      return Promise.resolve(self._flattenArray(res));
     });
   }
 
@@ -1057,7 +1061,7 @@ class StudioHelper {
       let resObj;
       // Check that all delete actions are ok
       for(let i=0, l=resArr.length; i<l; i++) {
-        if(resArr[i] !== 'ok') {
+        if(resArr[i].status !== 'ok') {
           return Promise.resolve({
             status: 'error',
             result: false,

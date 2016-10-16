@@ -147,7 +147,7 @@ describe('StudioHelper', function() {
       }).then(function (res) {
         res.forEach(function (folder){
           folder.status.should.equal('ok');
-        })
+        });
         return res.should.have.lengthOf(8);
       })
     });
