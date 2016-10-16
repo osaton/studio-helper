@@ -586,11 +586,12 @@ class StudioHelper {
    * }).then(function (res) {
    *   console.log(res.length + 'files uploaded');
    * })
+   * @async Returns Promise
    * @param {Object} settings
    * @param {Array<Object>} settings.folders
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
-   * @return {Promise<Array<Object>>} Array of objects with file upload information
+   * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
     return this.uploadFilesInFolders(settings.folders);
@@ -979,11 +980,11 @@ class StudioHelper {
    * Create folder
    * @async Returns a promise
    * @param {Object} settings
-   * @param {Object<string>} [settings.parentId] - Studio folder in which we want to create the new folder
-   * @param {Object<string>} [settings.name] - Name of the new folder
-   * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
-   * @param {Object<string>} [settings.localFolder] - local folder path
-   * @param {Object<boolean>} [settings.logCreated=false] - log created folders
+   * @param {string} [settings.parentId] - Studio folder in which we want to create the new folder
+   * @param {string} [settings.name] - Name of the new folder
+   * @param {boolean} [settings.addIfExists=true] - Return the already created folder id if false
+   * @param {string} [settings.localFolder] - local folder path
+   * @param {boolean} [settings.logCreated=false] - log created folders
    * @returns {ResultObj} [ResultObj.result]{@link CreateFolderResult}
    */
   createFolder(settings) {
