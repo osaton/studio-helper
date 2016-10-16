@@ -118,8 +118,8 @@ Create folder
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | settings | <code>Object</code> |  |  |
+| settings.name | <code>string</code> |  | Name of the new folder |
 | [settings.parentId] | <code>string</code> |  | Studio folder in which we want to create the new folder |
-| [settings.name] | <code>string</code> |  | Name of the new folder |
 | [settings.addIfExists] | <code>boolean</code> | <code>true</code> | Return the already created folder id if false |
 | [settings.localFolder] | <code>string</code> |  | local folder path |
 | [settings.logCreated] | <code>boolean</code> | <code>false</code> | log created folders |
