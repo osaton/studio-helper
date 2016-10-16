@@ -980,8 +980,8 @@ class StudioHelper {
    * Create folder
    * @async Returns a promise
    * @param {Object} settings
+   * @param {string} settings.name - Name of the new folder
    * @param {string} [settings.parentId] - Studio folder in which we want to create the new folder
-   * @param {string} [settings.name] - Name of the new folder
    * @param {boolean} [settings.addIfExists=true] - Return the already created folder id if false
    * @param {string} [settings.localFolder] - local folder path
    * @param {boolean} [settings.logCreated=false] - log created folders
