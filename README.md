@@ -23,7 +23,7 @@
     * [new StudioHelper(settings)](#new_StudioHelper_new)
     * [.createDirectoryFolders(folderData)](#StudioHelper+createDirectoryFolders) ⇒ <code>[Array.&lt;ResultObj&gt;](#ResultObj)</code>
     * [.getLocalFolders(path)](#StudioHelper+getLocalFolders) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.push(settings)](#StudioHelper+push) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
+    * [.push(settings)](#StudioHelper+push) ⇒ <code>Array.&lt;Object&gt;</code>
     * [.createFolder(settings)](#StudioHelper+createFolder) ⇒ <code>[ResultObj](#ResultObj)</code>
 
 <a name="new_StudioHelper_new"></a>
@@ -78,11 +78,12 @@ Get local directory folders
 
 <a name="StudioHelper+push"></a>
 
-### studioHelper.push(settings) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
+### studioHelper.push(settings) ⇒ <code>Array.&lt;Object&gt;</code>
 Push changes to Studio
 
 **Kind**: instance method of <code>[StudioHelper](#StudioHelper)</code>
-**Returns**: <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code> - Array of objects with file upload information
+**Returns**: <code>Array.&lt;Object&gt;</code> - Array of objects with file upload information
+**Async**: Returns Promise
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -117,11 +118,11 @@ Create folder
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | settings | <code>Object</code> |  |  |
-| [settings.parentId] | <code>Object.&lt;string&gt;</code> |  | Studio folder in which we want to create the new folder |
-| [settings.name] | <code>Object.&lt;string&gt;</code> |  | Name of the new folder |
-| [settings.addIfExists] | <code>Object.&lt;boolean&gt;</code> | <code>true</code> | Return the already created folder id if false |
-| [settings.localFolder] | <code>Object.&lt;string&gt;</code> |  | local folder path |
-| [settings.logCreated] | <code>Object.&lt;boolean&gt;</code> | <code>false</code> | log created folders |
+| [settings.parentId] | <code>string</code> |  | Studio folder in which we want to create the new folder |
+| [settings.name] | <code>string</code> |  | Name of the new folder |
+| [settings.addIfExists] | <code>boolean</code> | <code>true</code> | Return the already created folder id if false |
+| [settings.localFolder] | <code>string</code> |  | local folder path |
+| [settings.logCreated] | <code>boolean</code> | <code>false</code> | log created folders |
 
 <a name="ResultObj"></a>
 
