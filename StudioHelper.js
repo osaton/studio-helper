@@ -478,14 +478,13 @@ class StudioHelper {
 
   /**
    * Create folders found in local directory if not already created
-   *
-   * @private
-   *
+   * @async
    * @param {Object} folderData
    * @param {string} folderData.folderId - Studio folder id
    * @param {string} folderData.localFolder - Local folder path
-   * @param {boolean} [folderData.includeSubFolders=false] - create sub folders
-   * @param {boolean} [folderData.cache=true] - cache results
+   * @param {boolean} [folderData.includeSubFolders=false] - Create sub folders
+   * @param {boolean} [folderData.cache=true] - Cache results
+   * @return {Promise.<Folders>} A promise
    */
   createDirectoryFolders(folderData) {
     let self = this;
@@ -960,6 +959,22 @@ class StudioHelper {
   }
 
   /**
+   * @typedef {Object} FolderData
+   * @property {string} id Created folder id
+   * @property {string} name Local folder name, might be different in Studio
+   * @property {string} localFolder Local folder path
+   */
+  /**
+   * @typedef {Object} Folder
+   * @property {string} status Status
+   * @property {number} code 0 for success, -1 for error
+   * @property {FolderData} result Results data
+   */
+
+  /**
+   * @typedef {Folder[]} Folders
+   */
+  /**
    * Create folder
    *
    * @param {Object} settings
@@ -968,7 +983,7 @@ class StudioHelper {
    * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
    * @param {Object<string>} [settings.localFolder] - local folder path
    * @param {Object<boolean>} [settings.logCreated=false] - log created folders
-   * @return {Promise<Object>}
+   * @return {Promise.<FolderResObj>} A promise
    */
   createFolder(settings) {
     let self = this;
