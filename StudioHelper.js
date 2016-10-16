@@ -28,7 +28,7 @@ class StudioHelper {
 
   /**
    * @typedef {Object} ResultObj
-   * @property {string} status Status
+   * @property {string} status "ok" or "error"
    * @property {number} code 0 for success
    * @property {string|Object} result Results
    */

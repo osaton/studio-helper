@@ -132,7 +132,7 @@ Create folder
 
 | Name | Type | Description |
 | --- | --- | --- |
-| status | <code>string</code> | Status |
+| status | <code>string</code> | "ok" or "error" |
 | code | <code>number</code> | 0 for success |
 | result | <code>string</code> &#124; <code>Object</code> | Results |
 
