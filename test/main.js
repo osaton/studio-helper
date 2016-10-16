@@ -8,6 +8,9 @@ const should = require('should'),
       testFolder1 = '57fa91c86c6e79d9761b0a4e',
       testFolder2 = '57fa91cd6c6e790b7d1b0a4e';
 
+
+require('mocha-sinon');
+
 function getFolder(folderPath) {
   return path.join(__dirname, folderPath);
 }
@@ -18,6 +21,13 @@ function DefaultStudio() {
 
 describe('StudioHelper', function() {
   this.timeout(0);
+
+  beforeEach(function () {
+    let log = console.log;
+    this.sinon.stub(console, 'log', function() {
+      return log.apply(log, arguments);
+    });
+  });
 
   it('should initialize', function () {
     let studio = new StudioHelper({
@@ -90,6 +100,61 @@ describe('StudioHelper', function() {
       });
     });
 
+    it('should return the already created folder if addIfExists === false', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'createFolderTest-logging',
+      }).then(function (res) {
+        res.status.should.equal('ok');
+        let addedFolder = res.result.id;
+        return studio.createFolder({
+          parentId: mainFolder,
+          name: 'createFolderTest-logging',
+        }).then(function () {
+          res.result.id.should.equal(addedFolder);
+          return res.result.name.should.equal('createFolderTest-logging');
+        });
+      });
+    });
+
+    it('should create folder and log result if logCreated === true', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'createFolderTest-logging',
+        logCreated: true
+      }).then(function (res) {
+        res.status.should.equal('ok');
+        //console.log.calledOnce.should.equal(true);
+        console.log.calledWith('[Studio] Created folder: createFolderTest-logging').should.equal(true);
+        return res.result.name.should.equal('createFolderTest-logging');
+      });
+    });
+
+    it('should not log if folder already exists when addIfExists === false and logCreated === true', function () {
+      let studio = new StudioHelper({
+        studio: 'helper.studio.crasman.fi'
+      });
+
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'createFolderTest-logging',
+        addIfExists: false,
+        logCreated: true
+      }).then(function (res) {
+        res.status.should.equal('ok');
+        console.log.calledWith('[Studio] Created folder: createFolderTest-logging').should.equal(false);
+        return res.result.name.should.equal('createFolderTest-logging');
+      });
+    });
+
     /*
     it('should not create new folder if settings.addIfExists: false ', function () {
       let studio = new StudioHelper({
@@ -157,6 +222,36 @@ describe('StudioHelper', function() {
         folderId: addedTestFolder,
         localFolder: getFolder('folders'),
         includeSubFolders: true
+      }).then(function (res) {
+        let createResIds = [];
+        res.forEach(function (folder){
+          folder.status.should.equal('ok');
+          createResIds.push(folder.result.id);
+        })
+        res.should.have.lengthOf(8);
+        return studio.createDirectoryFolders({
+          folderId: addedTestFolder,
+          localFolder: getFolder('folders'),
+          includeSubFolders: true
+        }).then(function (res) {
+
+          // Ids should be the same as before
+          for(let i=0, l=res.length; i<l; i++) {
+            createResIds.indexOf(res[i].result.id).should.not.equal(-1);
+            //res[i].result.id.should.equal(createRes[i].result.id);
+          }
+
+          return res.should.have.lengthOf(8);
+        })
+      })
+    });
+
+    it('should return past results if cache === true', function () {
+      return studio.createDirectoryFolders({
+        folderId: addedTestFolder,
+        localFolder: getFolder('folders'),
+        includeSubFolders: true,
+        cache: true
       }).then(function (res) {
         let createResIds = [];
         res.forEach(function (folder){

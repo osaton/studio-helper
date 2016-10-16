@@ -481,16 +481,30 @@ class StudioHelper {
    *
    * @private
    *
-   *
-   * @param {string} folders[].folderId - Studio folder id
-   * @param {string} folders[].localFolder - Local folder path
-   * @param {boolean} folders[].includeSubFolders
+   * @param {Object} folderData
+   * @param {string} folderData.folderId - Studio folder id
+   * @param {string} folderData.localFolder - Local folder path
+   * @param {boolean} [folderData.includeSubFolders=false] - create sub folders
+   * @param {boolean} [folderData.cache=true] - cache results
    */
   createDirectoryFolders(folderData) {
     let self = this;
 
+    if(!this._createDirectoryFolderCache) {
+      this._createDirectoryFolderCache = {};
+    }
+
+    // If data has been cached already, resolve
+    if(this._createDirectoryFolderCache[folderData.folderId]) {
+      return Promise.resolve(this._createDirectoryFolderCache[folderData.folderId]);
+    }
+
     return this._createDirFolders(folderData, this._createDirFoldersData).then(function (res) {
-      return Promise.resolve(self._flattenArray(res));
+      let flatRes = self._flattenArray(res);
+      if(folderData.cache) {
+        self._createDirectoryFolderCache[folderData.folderId] = flatRes;
+      }
+      return Promise.resolve(self._flattenArray(flatRes));
     });
   }
 
@@ -953,13 +967,16 @@ class StudioHelper {
    * @param {Object<string>} [settings.name] - Name of the new folder
    * @param {Object<boolean>} [settings.addIfExists=true] - Return the already created folder id if false
    * @param {Object<string>} [settings.localFolder] - local folder path
+   * @param {Object<boolean>} [settings.logCreated=false] - log created folders
    * @return {Promise<Object>}
    */
   createFolder(settings) {
+    let self = this;
     let parentId = settings.parentId || '';
     let folderName = settings.name;
     let localFolderPath = settings.localFolder || '';
     let addIfExists = settings.addIfExists === false ? false : true;
+    let logging = settings.logCreated === true ? true : false;
     let apipath = 'folders/' + parentId;
 
     if(addIfExists) {
@@ -977,6 +994,11 @@ class StudioHelper {
               localFolder: path.join(localFolderPath, folderName)
             }
           };
+
+          if(logging) {
+            self._log('Created folder: ' + folderName);
+          }
+
         } else {
           resData = res;
         }
@@ -1021,6 +1043,10 @@ class StudioHelper {
                 localFolder: path.join(localFolderPath, folderName)
               }
             };
+
+            if(logging) {
+              self._log('Created folder: ' + folderName);
+            }
           } else {
             resData = res;
           }
