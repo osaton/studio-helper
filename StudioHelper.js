@@ -30,7 +30,7 @@ class StudioHelper {
    * @typedef {Object} ResultObj
    * @property {string} status "ok" or "error"
    * @property {number} code 0 for success
-   * @property {string|Object} result Results
+   * @property {string|Object|Array|boolean} result Results
    */
 
   /**

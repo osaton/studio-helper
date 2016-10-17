@@ -134,7 +134,7 @@ Create folder
 | --- | --- | --- |
 | status | <code>string</code> | "ok" or "error" |
 | code | <code>number</code> | 0 for success |
-| result | <code>string</code> &#124; <code>Object</code> | Results |
+| result | <code>string</code> &#124; <code>Object</code> &#124; <code>Array</code> &#124; <code>boolean</code> | Results |
 
 <a name="CreateFolderResult"></a>
 
