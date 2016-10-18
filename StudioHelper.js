@@ -447,6 +447,7 @@ class StudioHelper {
         parentId: folderData.folderId,
         name: localFolders[i],
         localFolder: folderData.localFolder,
+        logCreated: folderData.logCreated,
         addIfExists: false
       }));
     }
@@ -460,6 +461,7 @@ class StudioHelper {
           folderJobs.push(self._createDirFolders({
             folderId: folder.id,
             localFolder: path.join(folderData.localFolder, folder.name),
+            logCreated: folderData.logCreated,
             includeSubFolders: true
           }));
         }
@@ -491,6 +493,7 @@ class StudioHelper {
    * @param {string} folderData.localFolder - Local folder path
    * @param {boolean} [folderData.includeSubFolders=false] - Create sub folders
    * @param {boolean} [folderData.cache=true] - Cache results
+   * @param {boolean} [folderData.logCreated=false] - Log successfully created folders
    * @returns {ResultObj[]} [ResultObj.result]{@link CreateFolderResult}
    */
   createDirectoryFolders(folderData) {
@@ -591,10 +594,39 @@ class StudioHelper {
    * @param {Array<Object>} settings.folders
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
+   * @param {string} settings.folders[].includeSubFolders - Local folder path
    * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
-    return this.uploadFilesInFolders(settings.folders);
+    let self = this;
+    let createFolderJobs = [];
+
+    for(let i=settings.folders.length-1; i>=0; i--) {
+      let folderData = settings.folders[i];
+      if(folderData.includeSubFolders) {
+        folderData.logCreated = true;
+        folderData.includeSubFolders = true;
+        createFolderJobs.push(this.createDirectoryFolders(folderData));
+        settings.folders.splice(i, 1);
+      }
+    }
+
+    return Promise.all(createFolderJobs).then(function (res) {
+      let createdFolders = self._flattenArray(res);
+      let pushFolders = [];
+      
+      createdFolders.forEach(function (folderRes) {
+        pushFolders.push({
+          folderId: folderRes.result.id,
+          localFolder: folderRes.result.localFolder
+        });
+      });
+
+      // Concat the normally inserted folders to this array
+      pushFolders = pushFolders.concat(settings.folders);
+
+      return self.uploadFilesInFolders(pushFolders);
+    });
   }
 
   /**

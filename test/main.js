@@ -71,6 +71,22 @@ describe('StudioHelper', function() {
   });
 
   describe('#getFolders', function () {
+    let addedTestFolder;
+    let studio = new StudioHelper({
+      studio: 'helper.studio.crasman.fi'
+    });
+
+    before(function () {
+      // create push folder
+      return studio.createFolder({
+        parentId: mainFolder,
+        name: 'copyDirectoryFolders-test'
+      }).then(function (res) {
+        addedTestFolder = res.result.id;
+        return res.status.should.equal('ok');
+      });
+    });
+
     it('should get folders', function (done) {
       let studio = new StudioHelper({
         studio: 'helper.studio.crasman.fi'
@@ -81,6 +97,13 @@ describe('StudioHelper', function() {
           done();
         }
         //return res.status.should.equal('ok');
+      });
+    });
+
+    after(function () {
+      // clean up folder
+      return studio.deleteFolder(addedTestFolder).then(function (res) {
+        return res.status.should.equal('ok');
       });
     });
   });
@@ -132,7 +155,7 @@ describe('StudioHelper', function() {
         logCreated: true
       }).then(function (res) {
         res.status.should.equal('ok');
-        //console.log.calledOnce.should.equal(true);
+
         console.log.calledWith('[Studio] Created folder: createFolderTest-logging').should.equal(true);
         return res.result.name.should.equal('createFolderTest-logging');
       });
@@ -154,28 +177,6 @@ describe('StudioHelper', function() {
         return res.result.name.should.equal('createFolderTest-logging');
       });
     });
-
-    /*
-    it('should not create new folder if settings.addIfExists: false ', function () {
-      let studio = new StudioHelper({
-        studio: 'helper.studio.crasman.fi'
-      });
-
-      return studio.createFolder({
-        parentId: mainFolder,
-        name: 'createFolderTest-AddIfExists'
-      }).then(function (res) {
-        let addedFolderId = res.result;
-        return studio.createFolder({
-          parentId: mainFolder,
-          name: 'createFolderTest-AddIfExists',
-          addIfExists: false
-        }).then(function (res) {
-          // Should return the already created folder
-          return addedFolderId.should.equal(res.result);
-        });
-      });
-    });*/
   });
 
   describe('#createDirectoryFolders', function () {
@@ -303,7 +304,7 @@ describe('StudioHelper', function() {
   });
 
   describe('#push', function () {
-    describe('settings.folder[].includeChildFolders === false', function () {
+    describe('settings.folder[].includeSubFolders === false', function () {
       before(function () {
 
         let studio = new StudioHelper({
@@ -324,7 +325,7 @@ describe('StudioHelper', function() {
         });
       });
 
-      it('should push files to multiple folders', function () {
+      it('should create and push files to multiple folders', function () {
         let studio = new StudioHelper({
           studio: 'helper.studio.crasman.fi'
         });
@@ -343,8 +344,8 @@ describe('StudioHelper', function() {
       });
     });
 
-    /*
-    describe('#push - settings.includeChildFolders', function () {
+
+    describe('settings.folder[].includeSubFolders === true', function () {
       let addedPushFolder;
       let studio = new StudioHelper({
         studio: 'helper.studio.crasman.fi'
@@ -369,7 +370,34 @@ describe('StudioHelper', function() {
             includeSubFolders: true
           }]
         }).then(function (res) {
-          return res.should.have.lengthOf(4);
+          console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
+          return res.should.have.lengthOf(7);
+        })
+      });
+
+      it('should not create folders again', function () {
+        return studio.push({
+          folders: [{
+            folderId: addedPushFolder,
+            localFolder: getFolder('folders'),
+            includeSubFolders: true
+          }]
+        }).then(function (res) {
+          console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(false);
+          return console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(false);
+        })
+      });
+
+      it('should not upload unchanged files again', function () {
+        return studio.push({
+          folders: [{
+            folderId: addedPushFolder,
+            localFolder: getFolder('folders'),
+            includeSubFolders: true
+          }]
+        }).then(function (res) {
+          return res.should.have.lengthOf(0);
         })
       });
 
@@ -379,7 +407,7 @@ describe('StudioHelper', function() {
           return res.status.should.equal('ok');
         });
       });
-    });*/
+    });
   });
 
   describe('#deleteFiles', function () {
