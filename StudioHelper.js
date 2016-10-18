@@ -614,7 +614,7 @@ class StudioHelper {
     return Promise.all(createFolderJobs).then(function (res) {
       let createdFolders = self._flattenArray(res);
       let pushFolders = [];
-      
+
       createdFolders.forEach(function (folderRes) {
         pushFolders.push({
           folderId: folderRes.result.id,
@@ -1164,6 +1164,14 @@ class StudioHelper {
    */
   getFolders(parentId) {
     return this._get('folders', parentId);
+  }
+
+  /**
+   * Not implemented in the API. Maybe someday
+   * @private
+   */
+  getFolderDetails(folderId) {
+    return this._get('folderdetails', folderId);
   }
 
   /**
