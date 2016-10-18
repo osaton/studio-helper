@@ -63,6 +63,7 @@ Create folders found in local directory if not already created
 | folderData.localFolder | <code>string</code> |  | Local folder path |
 | [folderData.includeSubFolders] | <code>boolean</code> | <code>false</code> | Create sub folders |
 | [folderData.cache] | <code>boolean</code> | <code>true</code> | Cache results |
+| [folderData.logCreated] | <code>boolean</code> | <code>false</code> | Log successfully created folders |
 
 <a name="StudioHelper+getLocalFolders"></a>
 
@@ -91,6 +92,7 @@ Push changes to Studio
 | settings.folders | <code>Array.&lt;Object&gt;</code> |  |
 | settings.folders[].folderId | <code>string</code> | Studio folder id |
 | settings.folders[].localFolder | <code>string</code> | Local folder path |
+| settings.folders[].includeSubFolders | <code>string</code> | Local folder path |
 
 **Example**
 ```js
