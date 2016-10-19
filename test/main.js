@@ -391,7 +391,7 @@ describe('StudioHelper', function() {
         }).then(function (res) {
           console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
-          return res.should.have.lengthOf(7);
+          return res.should.have.lengthOf(9);
         })
       });
 
@@ -404,7 +404,7 @@ describe('StudioHelper', function() {
             includeSubFolders: true
           }]
         }).then(function (res) {
-          res.should.have.lengthOf(2);
+          res.should.have.lengthOf(3);
           console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
           console.log.reset();
@@ -429,7 +429,7 @@ describe('StudioHelper', function() {
             includeSubFolders: true
           }]
         }).then(function (res) {
-          res.should.have.lengthOf(2);
+          res.should.have.lengthOf(3);
           return studio.push({
             folders: [{
               folderId: addedPushFolder,
