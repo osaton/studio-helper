@@ -391,7 +391,7 @@ describe('StudioHelper', function() {
         }).then(function (res) {
           console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
-          return res.should.have.lengthOf(9);
+          return res.should.have.lengthOf(10);
         })
       });
 

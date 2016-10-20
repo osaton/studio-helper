@@ -607,7 +607,7 @@ class StudioHelper {
         folderData.logCreated = true;
         folderData.includeSubFolders = true;
         createFolderJobs.push(this.createDirectoryFolders(folderData));
-        settings.folders.splice(i, 1);
+        //settings.folders.splice(i, 1);
       }
     }
 
