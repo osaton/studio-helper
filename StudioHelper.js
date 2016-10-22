@@ -5,12 +5,14 @@ let request = require('request'),
     Promise = require('bluebird'),
     fs = require('fs'),
     path = require('path'),
-    ignore = require('ignore');
+    ignore = require('ignore'),
+    throat = require('throat')(Promise);
 
 Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
-      //CHUNK_SIZE = '900000',
+      CHUNK_SIZE = 1000000,
+      MAX_CONCURRENT_CONNECTIONS = 5,
       CREDENTIALS_FILE = '.studio-credentials',
       IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
@@ -342,6 +344,22 @@ class StudioHelper {
     return Promise.reject(results);
   }
 
+  _splitData(data) {
+    let chunks = [];
+    let len = 0;
+
+    if (data.length <= CHUNK_SIZE) {
+      return [data];
+    }
+
+    while (len < data.length) {
+      chunks.push(data.slice(len, Math.min(len + CHUNK_SIZE, data.length)));
+      len += CHUNK_SIZE;
+    }
+
+    return chunks;
+  }
+
   /**
    * @private
    */
@@ -371,26 +389,30 @@ class StudioHelper {
   /**
    * @private
    */
-  _uploadFileChunk(folderId, uploadToken, fileData) {
+  _uploadFileChunks(folderId, uploadToken, fileData) {
     let self = this;
+    let chunks = this._splitData(fileData);
+    let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
 
+    return Promise.resolve(chunks).map(function(data) {
+      return chunkThroat(function () {
+        return self._put('upload/' + folderId + '/' + uploadToken, data).then(function(res) {
+          return Promise.resolve(res);
+        });
+      });
+    });
+    /*
+    return Promise.map(uploadJobs).then(function (res) {
+      console.log(res);
+      return Promise.resolve(res);
+    });*/
+    /*
     return new Promise(function(resolve) {
       return self._put('upload/' + folderId + '/' + uploadToken, fileData).then(function(res) {
         resolve(res);
       });
-    });
+    });*/
   }
-
-  // TODO: chunkify file
-  /**
-   *
-   *
-   * @private
-   *
-   */
-  /*_uploadFileChunks(folderId, uploadToken, fileData) {
-
-  }*/
 
   /**
    * @private
@@ -707,7 +729,7 @@ class StudioHelper {
       }).then(function(res) {
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
-          return self._uploadFileChunk(folderId, uploadToken, fileData).then(function() {
+          return self._uploadFileChunks(folderId, uploadToken, fileData).then(function() {
             return self._finishFileUpload(folderId, uploadToken).then(function(res) {
               self._log('Uploaded: ' + localFolder + '/' + fileName);
               resolve(res);
@@ -794,26 +816,8 @@ class StudioHelper {
     let uploadFiles = this.getUploadInformation(files, folderId);
 
     return this.batchUpload(uploadFiles);
-
-    //let uploadFiles = this.getUploadInformation(files);
-    /*
-    for (let i = 0, l = localFiles.length; i < l; i++) {
-      let fileName = localFiles[i],
-          fileInfo = self.getLocalFileInfo(path + '/' + fileName);
-
-      // Add file to be replaced
-      fileUploadArray.push({
-        action: 'upload',
-        name: fileName,
-        folderId: studioFolderId,
-        localFolder: path,
-        type: fileInfo.type,
-        size: fileInfo.size,
-        sha1: fileInfo.sha1,
-        data: fileInfo.data
-      });
-    }*/
   }
+
   _uploadChanged(folderId, files, path) {
     let self = this;
 
