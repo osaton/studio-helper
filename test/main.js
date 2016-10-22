@@ -249,14 +249,15 @@ describe('StudioHelper', function() {
       });
     });
   });
-  /*
-  describe('#replaceFile', function () {
+
+  describe('#replaceFiles', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('files'), '5mb-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
     let studio = new StudioHelper({
       'studio': 'helper.studio.crasman.fi'
     });
+
     before(function () {
       return studio.createFolder({
         'parentId': mainFolder,
@@ -272,20 +273,28 @@ describe('StudioHelper', function() {
     });
 
     it('should replace files', function () {
-      console.log(addedTestFiles);
-      for (let i=0, l=addedTestFiles.length; i<l; i++) {
+      //console.log(addedTestFiles);
+      let files = [{
+        'fileId': addedTestFiles[0].result.createdFileId,
+        'localFile': localTestFiles[0]
+      }, {
+        'fileId': addedTestFiles[1].result.createdFileId,
+        'localFile': localTestFiles[1]
+      }];
 
-      }
-      let uploadInfo = studio.getUploadInformation(localTestFiles, 'someMadeUpFolder');
-      console.log(uploadFiles);
-    })
+      //console.log(files);
+      return studio.replaceFiles(files).then(function(res) {
+        res[0].status.should.equal('ok');
+        res[1].status.should.equal('ok');
+      });
+    });
 
     after(function () {
       return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
         return Promise.resolve(res);
       });
     });
-  });*/
+  });
 
   describe('#createDirectoryFolders', function () {
     let addedTestFolder;

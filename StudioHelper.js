@@ -365,10 +365,14 @@ class StudioHelper {
    */
   _replaceFileChunk(folderId, uploadToken, fileData) {
     let self = this;
+    let chunks = this._splitData(fileData);
+    let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
 
-    return new Promise(function(resolve) {
-      return self._put('replace/' + folderId + '/' + uploadToken, fileData).then(function(res) {
-        resolve(res);
+    return Promise.resolve(chunks).map(function(data) {
+      return chunkThroat(function () {
+        return self._put('replace/' + folderId + '/' + uploadToken, data).then(function(res) {
+          return Promise.resolve(res);
+        });
       });
     });
   }
@@ -401,17 +405,6 @@ class StudioHelper {
         });
       });
     });
-    /*
-    return Promise.map(uploadJobs).then(function (res) {
-      console.log(res);
-      return Promise.resolve(res);
-    });*/
-    /*
-    return new Promise(function(resolve) {
-      return self._put('upload/' + folderId + '/' + uploadToken, fileData).then(function(res) {
-        resolve(res);
-      });
-    });*/
   }
 
   /**
@@ -802,6 +795,40 @@ class StudioHelper {
   }
 
   /**
+   * Get required information about files for replacement
+   *
+   * @private for now
+   * @param {Array<Object>} files
+   * @param {string} files[].fileId - Studio file id
+   * @param {string} files[].localFile - Local file path
+   */
+  getReplaceInformation(files) {
+    let replaceReadyFiles = [];
+
+    for (let i = 0, l = files.length; i < l; i++) {
+      let fileId = files[i].fileId,
+          localFile = files[i].localFile,
+          filePath = path.dirname(localFile),
+          fileName = path.basename(localFile),
+          fileInfo = this.getLocalFileInfo(localFile);
+
+      replaceReadyFiles.push({
+        'action': 'replace',
+        'id': fileId,
+        'type': fileInfo.type,
+        'size': fileInfo.size,
+        'localFolder': filePath,
+        'name': fileName,
+        'sha1': fileInfo.sha1,
+        'data': fileInfo.data,
+        'createNewVersion': 1
+      });
+    }
+
+    return replaceReadyFiles;
+  }
+
+  /**
    * Upload files to a specified folder
    * @private for now
    * @param  {Array<string>} files - file with path
@@ -816,6 +843,20 @@ class StudioHelper {
     let uploadFiles = this.getUploadInformation(files, folderId);
 
     return this.batchUpload(uploadFiles);
+  }
+
+  /**
+   * Replace files
+   * @private for now
+   * @param {Array<Object>} files
+   * @param {string} files[].fileId - Studio file id
+   * @param {string} files[].localFile - Local file path
+   * @return {Promise<Array<Object>>}
+   */
+  replaceFiles(files) {
+    let replaceFiles = this.getReplaceInformation(files);
+    console.log(replaceFiles);
+    return this.batchUpload(replaceFiles);
   }
 
   _uploadChanged(folderId, files, path) {
