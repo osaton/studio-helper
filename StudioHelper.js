@@ -10,7 +10,7 @@ let request = require('request'),
 Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
-      CHUNK_SIZE = '900000',
+      //CHUNK_SIZE = '900000',
       CREDENTIALS_FILE = '.studio-credentials',
       IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
@@ -64,17 +64,17 @@ class StudioHelper {
       this.promptSchema = settings.promptSchema;
     } else {
       this.promptSchema = [{
-        message: 'Username',
-        type: 'input',
-        name: 'name'
+        'message': 'Username',
+        'type': 'input',
+        'name': 'name'
       }, {
-        message: 'Password',
-        type: 'password',
-        name: 'password'
+        'message': 'Password',
+        'type': 'password',
+        'name': 'password'
       }, {
-        message: 'Yubikey token',
-        type: 'input',
-        name: 'token'
+        'message': 'Yubikey token',
+        'type': 'input',
+        'name': 'token'
       }];
     }
 
@@ -132,16 +132,15 @@ class StudioHelper {
    * @private
    */
   _addToIgnore(filePath) {
-
     try {
-      if(!this.ignore) {
+      if (!this.ignore) {
         this.ignore = ignore();
       }
 
       this.ignore.add(fs.readFileSync(filePath, 'utf-8').toString());
 
       return true;
-    } catch(err) {
+    } catch (err) {
 
     }
     return false;
@@ -152,9 +151,9 @@ class StudioHelper {
    */
   _post(action, postData, customOptions, passAPIResponseHandling) {
     let options = {
-          url: '',
-          proxy: this.proxy,
-          headers: {
+          'url': '',
+          'proxy': this.proxy,
+          'headers': {
             'X-authToken': this.authToken
           }
         },
@@ -172,9 +171,8 @@ class StudioHelper {
 
     options.url = this.apiUrl + action;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return request.post(options, function(error, response, body) {
-
         if (body && passAPIResponseHandling) {
           resolve(JSON.parse(body));
         }
@@ -184,7 +182,6 @@ class StudioHelper {
         }).catch(function(res) {
           self._log(res.result);
         });
-
       }).form(postData);
     });
   }
@@ -194,12 +191,12 @@ class StudioHelper {
    */
   _put(action, data) {
     let options = {
-          url: '',
-          proxy: this.proxy,
-          headers: {
+          'url': '',
+          'proxy': this.proxy,
+          'headers': {
             'X-authToken': this.authToken
           },
-          body: data
+          'body': data
         },
         self = this;
 
@@ -209,7 +206,7 @@ class StudioHelper {
 
     options.url = this.apiUrl + action;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       request.put(options, function(error, response, body) {
         //let data = JSON.parse(body);
 
@@ -227,9 +224,9 @@ class StudioHelper {
    */
   _get(action) {
     let options = {
-          url: '',
-          proxy: this.proxy,
-          headers: {
+          'url': '',
+          'proxy': this.proxy,
+          'headers': {
             'X-authToken': this.authToken
           }
         },
@@ -246,9 +243,8 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       request.get(options, function(error, response, body) {
-
         allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
@@ -264,9 +260,9 @@ class StudioHelper {
    */
   _delete(action) {
     let options = {
-          url: '',
-          proxy: this.proxy,
-          headers: {
+          'url': '',
+          'proxy': this.proxy,
+          'headers': {
             'X-authToken': this.authToken
           }
         },
@@ -282,9 +278,8 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       request.delete(options, function(error, response, body) {
-
         allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
@@ -299,13 +294,11 @@ class StudioHelper {
    * @private
    */
   _handleAPIResponse(error, body, lastCall) {
-
     let self = this,
         args = Array.prototype.slice.call(arguments),
         results;
 
-
-    if(error) {
+    if (error) {
       results = {
         'result': error,
         'status': 'networkError'
@@ -355,7 +348,7 @@ class StudioHelper {
   _replaceFileChunk(folderId, uploadToken, fileData) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self._put('replace/' + folderId + '/' + uploadToken, fileData).then(function(res) {
         resolve(res);
       });
@@ -368,9 +361,8 @@ class StudioHelper {
   _finishFileReplace(folderId, uploadToken) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self._post('replace/' + folderId + '/' + uploadToken).then(function(res) {
-
         resolve(res);
       });
     });
@@ -382,22 +374,23 @@ class StudioHelper {
   _uploadFileChunk(folderId, uploadToken, fileData) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self._put('upload/' + folderId + '/' + uploadToken, fileData).then(function(res) {
         resolve(res);
       });
     });
   }
 
+  // TODO: chunkify file
   /**
-   * TODO: chunkify file
+   *
    *
    * @private
    *
    */
-  _uploadFileChunks(folderId, uploadToken, fileData) {
+  /*_uploadFileChunks(folderId, uploadToken, fileData) {
 
-  }
+  }*/
 
   /**
    * @private
@@ -405,9 +398,8 @@ class StudioHelper {
   _finishFileUpload(folderId, uploadToken) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self._post('upload/' + folderId + '/' + uploadToken).then(function(res) {
-
         resolve(res);
       });
     });
@@ -429,6 +421,8 @@ class StudioHelper {
    * @private
    */
   _updateCredentials(data) {
+    let self = this;
+
     fs.writeFile(this.credentialsFile, JSON.stringify(data), function(err) {
       if (err) {
         self._log(err);
@@ -436,41 +430,38 @@ class StudioHelper {
     });
   }
 
-  _createDirFolders(folderData, parentData) {
+  _createDirFolders(folderData) {
     let self = this;
     let localFolders = self.getLocalFolders(folderData.localFolder);
     let folderJobs = [];
-    let treeData = parentData || [];
 
-    for(let i=0, l=localFolders.length; i<l; i++) {
+    for (let i=0, l=localFolders.length; i<l; i++) {
       folderJobs.push(this.createFolder({
-        parentId: folderData.folderId,
-        name: localFolders[i],
-        localFolder: folderData.localFolder,
-        logCreated: folderData.logCreated,
-        addIfExists: false
+        'parentId': folderData.folderId,
+        'name': localFolders[i],
+        'localFolder': folderData.localFolder,
+        'logCreated': folderData.logCreated,
+        'addIfExists': false
       }));
     }
 
     return Promise.all(folderJobs).then(function (parentRes) {
-      if(folderData.includeSubFolders && parentRes.length) {
+      if (folderData.includeSubFolders && parentRes.length) {
         let folderJobs = [];
 
-        for(let i=0, l=parentRes.length; i<l; i++) {
+        for (let i=0, l=parentRes.length; i<l; i++) {
           let folder = parentRes[i].result;
           folderJobs.push(self._createDirFolders({
-            folderId: folder.id,
-            localFolder: path.join(folderData.localFolder, folder.name),
-            logCreated: folderData.logCreated,
-            includeSubFolders: true
+            'folderId': folder.id,
+            'localFolder': path.join(folderData.localFolder, folder.name),
+            'logCreated': folderData.logCreated,
+            'includeSubFolders': true
           }));
         }
 
-        if(folderJobs.length) {
-
+        if (folderJobs.length) {
           // Create child folders
           return Promise.all(folderJobs).then(function (childRes) {
-
             // and concat results with parent data
             parentRes = parentRes.concat(childRes);
             return Promise.resolve(parentRes);
@@ -478,7 +469,6 @@ class StudioHelper {
         } else {
           return Promise.resolve(parentRes);
         }
-
       } else {
         return Promise.resolve(parentRes);
       }
@@ -499,18 +489,18 @@ class StudioHelper {
   createDirectoryFolders(folderData) {
     let self = this;
 
-    if(!this._createDirectoryFolderCache) {
+    if (!this._createDirectoryFolderCache) {
       this._createDirectoryFolderCache = {};
     }
 
     // If data has been cached already, resolve
-    if(this._createDirectoryFolderCache[folderData.folderId]) {
+    if (this._createDirectoryFolderCache[folderData.folderId]) {
       return Promise.resolve(this._createDirectoryFolderCache[folderData.folderId]);
     }
 
     return this._createDirFolders(folderData, this._createDirFoldersData).then(function (res) {
       let flatRes = self._flattenArray(res);
-      if(folderData.cache) {
+      if (folderData.cache) {
         self._createDirectoryFolderCache[folderData.folderId] = flatRes;
       }
       return Promise.resolve(self._flattenArray(flatRes));
@@ -524,29 +514,26 @@ class StudioHelper {
   _showLoginPrompt() {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
+      let showPrompt;
 
-      function showPrompt() {
-
+      showPrompt = function() {
         self.inquirer.prompt(self.promptSchema).then(function(result) {
-
           if (!result) {
             return;
           }
 
           return self.login(result.name, result.password, result.token, LONG_SESSION).then(function(res) {
             if (res.status === 'ok') {
-
               self._updateCredentials({
-                authToken: res.result.authToken,
-                username: result.name
+                'authToken': res.result.authToken,
+                'username': result.name
               });
 
               self.setAuthToken(res.result.authToken);
 
               resolve(res);
             } else {
-
               // Show error
               self._log(res.result);
 
@@ -601,9 +588,9 @@ class StudioHelper {
     let self = this;
     let createFolderJobs = [];
 
-    for(let i=settings.folders.length-1; i>=0; i--) {
+    for (let i=settings.folders.length-1; i>=0; i--) {
       let folderData = settings.folders[i];
-      if(folderData.includeSubFolders) {
+      if (folderData.includeSubFolders) {
         folderData.logCreated = true;
         folderData.includeSubFolders = true;
         createFolderJobs.push(this.createDirectoryFolders(folderData));
@@ -617,8 +604,8 @@ class StudioHelper {
 
       createdFolders.forEach(function (folderRes) {
         pushFolders.push({
-          folderId: folderRes.result.id,
-          localFolder: folderRes.result.localFolder
+          'folderId': folderRes.result.id,
+          'localFolder': folderRes.result.localFolder
         });
       });
 
@@ -645,10 +632,8 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       self._get('files', folderId).then(function(res) {
-
         if (res.status === 'error') {
           reject(res.code);
-
         }
 
         resolve(res.result);
@@ -671,23 +656,22 @@ class StudioHelper {
       return self._delete('file', file);
     }).then(function (res) {
       let resArr = res;
-      let resObj;
 
       // Check that all delete actions are ok
-      for(let i=0, l=resArr.length; i<l; i++) {
-        if(resArr[i].result === false) {
+      for (let i=0, l=resArr.length; i<l; i++) {
+        if (resArr[i].result === false) {
           return Promise.resolve({
-            status: 'error',
-            result: false,
-            code: -1
+            'status': 'error',
+            'result': false,
+            'code': -1
           });
         }
       }
 
       return Promise.resolve({
-        status: 'ok',
-        result: true,
-        code: 0
+        'status': 'ok',
+        'result': true,
+        'code': 0
       });
     });
   }
@@ -700,11 +684,11 @@ class StudioHelper {
         type = mime.lookup(filePath);
 
     return {
-      type: type,
-      size: stats.size,
-      changed: changed,
-      sha1: sha1,
-      data: data
+      'type': type,
+      'size': stats.size,
+      'changed': changed,
+      'sha1': sha1,
+      'data': data
     };
   }
 
@@ -716,14 +700,14 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       return self._post('upload/' + folderId, {
-        filename: fileName,
-        filetype: fileType,
-        filesize: fileSize,
-        sha1: sha1
+        'filename': fileName,
+        'filetype': fileType,
+        'filesize': fileSize,
+        'sha1': sha1
       }).then(function(res) {
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
-          return self._uploadFileChunk(folderId, uploadToken, fileData).then(function(res) {
+          return self._uploadFileChunk(folderId, uploadToken, fileData).then(function() {
             return self._finishFileUpload(folderId, uploadToken).then(function(res) {
               self._log('Uploaded: ' + localFolder + '/' + fileName);
               resolve(res);
@@ -741,18 +725,16 @@ class StudioHelper {
   replaceFile(fileId, fileType, fileSize, sha1, fileData, fileName, localFolder) {
     let self = this;
     return new Promise(function(resolve, reject) {
-
       // Start upload
       return self._post('replace/' + fileId, {
-        filetype: fileType,
-        filesize: fileSize,
-        sha1: sha1,
-        createNewVersion: 1
+        'filetype': fileType,
+        'filesize': fileSize,
+        'sha1': sha1,
+        'createNewVersion': 1
       }).then(function(res) {
-
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
-          return self._replaceFileChunk(fileId, uploadToken, fileData).then(function(res) {
+          return self._replaceFileChunk(fileId, uploadToken, fileData).then(function() {
             return self._finishFileReplace(fileId, uploadToken).then(function(res) {
               self._log('Updated: ' + localFolder + '/' + fileName);
               resolve(res);
@@ -783,14 +765,14 @@ class StudioHelper {
 
       // Add file to be replaced
       uploadReadyFiles.push({
-        action: 'upload',
-        name: fileName,
-        folderId: folderId,
-        localFolder: filePath,
-        type: fileInfo.type,
-        size: fileInfo.size,
-        sha1: fileInfo.sha1,
-        data: fileInfo.data
+        'action': 'upload',
+        'name': fileName,
+        'folderId': folderId,
+        'localFolder': filePath,
+        'type': fileInfo.type,
+        'size': fileInfo.size,
+        'sha1': fileInfo.sha1,
+        'data': fileInfo.data
       });
     }
 
@@ -805,8 +787,7 @@ class StudioHelper {
    * @return {Promise<Array<Object>>}
    */
   uploadFiles(files, folderId) {
-
-    if(!folderId) {
+    if (!folderId) {
       throw Error('StudioHelper#uploadFiles: folderId not set');
     }
 
@@ -836,7 +817,7 @@ class StudioHelper {
   _uploadChanged(folderId, files, path) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self.getFiles(folderId).then(function(studioFiles) {
         return self.getChangedFiles(studioFiles, files, path, folderId).then(function(changedFiles) {
           return self.batchUpload(changedFiles).then(function(res) {
@@ -867,8 +848,13 @@ class StudioHelper {
       throw Error('StudioHelper#login: missing username and / or password');
     }
 
-    return new Promise(function(resolve, reject) {
-      return self._post('login', {username: username, password: password, token: token, longSession: longSession}, {timeout: 10000}, true).then(function(res) {
+    return new Promise(function(resolve) {
+      return self._post('login', {
+        'username': username,
+        'password': password,
+        'token': token,
+        'longSession': longSession
+      }, { 'timeout': 10000 }, true).then(function(res) {
         resolve(res);
       }, function(err) {
         resolve(err);
@@ -880,11 +866,9 @@ class StudioHelper {
 
   getChangedFiles(studioFiles, localFiles, path, studioFolderId) {
     let self = this,
-        fileDetailsWantedCount = 0,
-        fileDetailsFetchedCount = 0,
         fileDetailsNeeded = [];
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       let fileUploadArray = [];
 
       for (let i = 0, l = studioFiles.length; i < l; i++) {
@@ -898,7 +882,6 @@ class StudioHelper {
               changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
 
           if (changedTime > +studioFile.createdAt) {
-
             let fileInfo = self.getLocalFileInfo(path + '/' + fileName);
 
             fileDetailsNeeded.push({
@@ -908,22 +891,21 @@ class StudioHelper {
             });
 
             fileUploadArray.push({
-              action: 'replace',
-              folderId: studioFolderId,
-              id: studioFile.id,
-              type: fileInfo.type,
-              size: fileInfo.size,
-              localFolder: path,
-              name: fileName,
-              sha1: fileInfo.sha1,
-              data: fileInfo.data,
-              createNewVersion: 1
+              'action': 'replace',
+              'folderId': studioFolderId,
+              'id': studioFile.id,
+              'type': fileInfo.type,
+              'size': fileInfo.size,
+              'localFolder': path,
+              'name': fileName,
+              'sha1': fileInfo.sha1,
+              'data': fileInfo.data,
+              'createNewVersion': 1
             });
 
             // Remove it from localFiles array. We only want new files to remain there
             localFiles.splice(localFileIndex, 1);
           } else {
-
             // Older local file, remove from localFiles
             localFiles.splice(localFileIndex, 1);
           }
@@ -939,22 +921,20 @@ class StudioHelper {
 
         // Add file to be replaced
         fileUploadArray.push({
-          action: 'upload',
-          name: fileName,
-          folderId: studioFolderId,
-          localFolder: path,
-          type: fileInfo.type,
-          size: fileInfo.size,
-          sha1: fileInfo.sha1,
-          data: fileInfo.data
+          'action': 'upload',
+          'name': fileName,
+          'folderId': studioFolderId,
+          'localFolder': path,
+          'type': fileInfo.type,
+          'size': fileInfo.size,
+          'sha1': fileInfo.sha1,
+          'data': fileInfo.data
         });
       }
 
       Promise.resolve(fileDetailsNeeded).map(function(file) {
         return self.getFileDetails(file.id).then(function(fileDetails) {
-
           if (fileDetails && fileDetails.details && fileDetails.details.sha1) {
-
             // If file has not been changed add it to removable files
             if (fileDetails.details.sha1 === file.sha1) {
               return file.id;
@@ -964,7 +944,6 @@ class StudioHelper {
           }
         });
       }).then(function(res) {
-
         // Remove unchanged files from upload array
         for (let i = res.length - 1; i >= 0; i--) {
           if (res[i]) {
@@ -982,7 +961,6 @@ class StudioHelper {
       if (!fileDetailsNeeded.length) {
         resolve(fileUploadArray);
       }
-
     });
   }
 
@@ -991,7 +969,6 @@ class StudioHelper {
 
     return new Promise(function(resolve, reject) {
       self._get('filedetails', fileId).then(function(res) {
-
         if (res.status === 'error') {
           reject(res.code);
         }
@@ -1028,26 +1005,25 @@ class StudioHelper {
     let logging = settings.logCreated === true ? true : false;
     let apipath = 'folders/' + parentId;
 
-    if(addIfExists) {
+    if (addIfExists) {
       return this._post(apipath, {
-        name: folderName
+        'name': folderName
       }).then(function (res) {
         let resData;
-        if(res.status === 'ok') {
+        if (res.status === 'ok') {
           resData = {
-            status: 'ok',
-            code: 0,
-            result: {
-              id: res.result,
-              name: folderName,
-              localFolder: path.join(localFolderPath, folderName)
+            'status': 'ok',
+            'code': 0,
+            'result': {
+              'id': res.result,
+              'name': folderName,
+              'localFolder': path.join(localFolderPath, folderName)
             }
           };
 
-          if(logging) {
+          if (logging) {
             self._log('Created folder: ' + folderName);
           }
-
         } else {
           resData = res;
         }
@@ -1061,16 +1037,16 @@ class StudioHelper {
         let folders = res.result;
 
         // Return folder data if found
-        for(let i=0, l=folders.length; i<l; i++) {
+        for (let i=0, l=folders.length; i<l; i++) {
           let folder = folders[i];
-          if(folder.name === folderName) {
+          if (folder.name === folderName) {
             return Promise.resolve({
-              status: 'ok',
-              code: 0,
-              result: {
-                id: folder.id,
-                name: folderName,
-                localFolder: path.join(localFolderPath, folderName)
+              'status': 'ok',
+              'code': 0,
+              'result': {
+                'id': folder.id,
+                'name': folderName,
+                'localFolder': path.join(localFolderPath, folderName)
               }
             });
           }
@@ -1078,22 +1054,22 @@ class StudioHelper {
 
         // If not found, create normally
         return self._post(apipath, {
-          name: folderName
+          'name': folderName
         }).then(function (res) {
           let resData;
 
-          if(res.status === 'ok') {
+          if (res.status === 'ok') {
             resData = {
-              status: 'ok',
-              code: 0,
-              result: {
-                id: res.result,
-                name: folderName,
-                localFolder: path.join(localFolderPath, folderName)
+              'status': 'ok',
+              'code': 0,
+              'result': {
+                'id': res.result,
+                'name': folderName,
+                'localFolder': path.join(localFolderPath, folderName)
               }
             };
 
-            if(logging) {
+            if (logging) {
               self._log('Created folder: ' + folderName);
             }
           } else {
@@ -1135,22 +1111,22 @@ class StudioHelper {
       });
     }).then(function (res) {
       let resArr = self._flattenArray(res);
-      let resObj;
+
       // Check that all delete actions are ok
-      for(let i=0, l=resArr.length; i<l; i++) {
-        if(resArr[i].status !== 'ok') {
+      for (let i=0, l=resArr.length; i<l; i++) {
+        if (resArr[i].status !== 'ok') {
           return Promise.resolve({
-            status: 'error',
-            result: false,
-            code: -1
+            'status': 'error',
+            'result': false,
+            'code': -1
           });
         }
       }
 
       return Promise.resolve({
-        status: 'ok',
-        result: true,
-        code: 0
+        'status': 'ok',
+        'result': true,
+        'code': 0
       });
     })
   }
@@ -1206,7 +1182,7 @@ class StudioHelper {
   _uploadChanged(folderId, files, path) {
     let self = this;
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       return self.getFiles(folderId).then(function(studioFiles) {
         return self.getChangedFiles(studioFiles, files, path, folderId).then(function(changedFiles) {
           return self.batchUpload(changedFiles).then(function(res) {
@@ -1231,21 +1207,19 @@ class StudioHelper {
 
   uploadFilesInFolders(folders) {
     let self = this,
-        foldersData = [],
-        ignoredFiles = [];
+        foldersData = [];
 
     for (let i = 0, l = folders.length; i < l; i++) {
       try {
         let folder = folders[i];
         let folderData = {
-          folderId: folder.folderId,
-          localFolder: folder.localFolder,
-          includeSubFolders: folder.includeSubFolders,
-          files: []
+          'folderId': folder.folderId,
+          'localFolder': folder.localFolder,
+          'includeSubFolders': folder.includeSubFolders,
+          'files': []
         };
 
         let localFiles = fs.readdirSync(folder.localFolder).filter(function(file) {
-
           // Filter out ignored files if any
           if (self.ignore) {
             return !!self.ignore.filter([path.join(folder.localFolder, file)]).length;
@@ -1263,7 +1237,6 @@ class StudioHelper {
         }
 
         foldersData.push(folderData);
-
       } catch (e) {
 
       }
