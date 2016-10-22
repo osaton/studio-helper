@@ -594,7 +594,7 @@ class StudioHelper {
    * @param {Array<Object>} settings.folders
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
-   * @param {string} settings.folders[].includeSubFolders - Local folder path
+   * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
    * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
