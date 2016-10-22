@@ -86,13 +86,13 @@ Push changes to Studio
 **Returns**: <code>Array.&lt;Object&gt;</code> - Array of objects with file upload information
 **Async**: Returns Promise
 
-| Param | Type | Description |
-| --- | --- | --- |
-| settings | <code>Object</code> |  |
-| settings.folders | <code>Array.&lt;Object&gt;</code> |  |
-| settings.folders[].folderId | <code>string</code> | Studio folder id |
-| settings.folders[].localFolder | <code>string</code> | Local folder path |
-| settings.folders[].includeSubFolders | <code>string</code> | Local folder path |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| settings | <code>Object</code> |  |  |
+| settings.folders | <code>Array.&lt;Object&gt;</code> |  |  |
+| settings.folders[].folderId | <code>string</code> |  | Studio folder id |
+| settings.folders[].localFolder | <code>string</code> |  | Local folder path |
+| [settings.folders[].includeSubFolders] | <code>boolean</code> | <code>false</code> | Create and upload sub folders |
 
 **Example**
 ```js
