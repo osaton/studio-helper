@@ -6,13 +6,14 @@ let request = require('request'),
     fs = require('fs'),
     path = require('path'),
     ignore = require('ignore'),
-    throat = require('throat')(Promise);
+    throat = require('throat')(Promise),
+    ProgressBar = require('progress');
 
 Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
-      CHUNK_SIZE = 1000000,
-      MAX_CONCURRENT_CONNECTIONS = 5,
+      CHUNK_SIZE = 4000000,
+      MAX_CONCURRENT_CONNECTIONS = 1,
       CREDENTIALS_FILE = '.studio-credentials',
       IGNORE_FILE = '.studio-ignore',
       LONG_SESSION = 1;
@@ -344,6 +345,17 @@ class StudioHelper {
     return Promise.reject(results);
   }
 
+  _showProgressBar(fileName, dataLength) {
+    return new ProgressBar('[Studio] Uploading ' + fileName + ' [:bar] :percent', {
+      'complete': '=',
+      'incomplete': ' ',
+      'width': 20,
+      'clear': true,
+      'total': dataLength
+    });
+  }
+
+
   _splitData(data) {
     let chunks = [];
     let len = 0;
@@ -363,14 +375,22 @@ class StudioHelper {
   /**
    * @private
    */
-  _replaceFileChunk(folderId, uploadToken, fileData) {
+  _replaceFileChunks(folderId, uploadToken, fileData, fileName) {
     let self = this;
     let chunks = this._splitData(fileData);
     let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
+    let bar;
+
+    if (chunks.length) {
+      bar = this._showProgressBar(fileName, fileData.length);
+    }
 
     return Promise.resolve(chunks).map(function(data) {
       return chunkThroat(function () {
         return self._put('replace/' + folderId + '/' + uploadToken, data).then(function(res) {
+          if (bar) {
+            bar.tick(data.length);
+          }
           return Promise.resolve(res);
         });
       });
@@ -393,14 +413,22 @@ class StudioHelper {
   /**
    * @private
    */
-  _uploadFileChunks(folderId, uploadToken, fileData) {
+  _uploadFileChunks(folderId, uploadToken, fileData, fileName) {
     let self = this;
     let chunks = this._splitData(fileData);
     let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
+    let bar;
+
+    if (chunks.length) {
+      bar = this._showProgressBar(fileName, fileData.length);
+    }
 
     return Promise.resolve(chunks).map(function(data) {
       return chunkThroat(function () {
         return self._put('upload/' + folderId + '/' + uploadToken, data).then(function(res) {
+          if (bar) {
+            bar.tick(data.length);
+          }
           return Promise.resolve(res);
         });
       });
@@ -722,7 +750,7 @@ class StudioHelper {
       }).then(function(res) {
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
-          return self._uploadFileChunks(folderId, uploadToken, fileData).then(function() {
+          return self._uploadFileChunks(folderId, uploadToken, fileData, fileName).then(function() {
             return self._finishFileUpload(folderId, uploadToken).then(function(res) {
               self._log('Uploaded: ' + localFolder + '/' + fileName);
               resolve(res);
@@ -749,7 +777,7 @@ class StudioHelper {
       }).then(function(res) {
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
-          return self._replaceFileChunk(fileId, uploadToken, fileData).then(function() {
+          return self._replaceFileChunks(fileId, uploadToken, fileData, fileName).then(function() {
             return self._finishFileReplace(fileId, uploadToken).then(function(res) {
               self._log('Updated: ' + localFolder + '/' + fileName);
               resolve(res);
@@ -855,7 +883,6 @@ class StudioHelper {
    */
   replaceFiles(files) {
     let replaceFiles = this.getReplaceInformation(files);
-    console.log(replaceFiles);
     return this.batchUpload(replaceFiles);
   }
 

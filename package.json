@@ -19,6 +19,7 @@
     "ignore": "^3.1.5",
     "inquirer": "^1.1.3",
     "mime-types": "^2.1.11",
+    "progress": "^1.1.8",
     "prompt": "^1.0.0",
     "request": "^2.74.0",
     "throat": "^3.0.0"

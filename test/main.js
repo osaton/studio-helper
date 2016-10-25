@@ -226,12 +226,12 @@ describe('StudioHelper', function() {
       });
     });
 
-    it('should upload files over 1MB', function () {
+    it('should upload files over 25MB', function () {
       let studio = new StudioHelper({
         'studio': 'helper.studio.crasman.fi'
       });
 
-      let files = [path.join(getFolder('files'), '5mb-file')];
+      let files = [path.join(getFolder('files'), '13m-file')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
         res.should.have.lengthOf(1);
@@ -253,7 +253,7 @@ describe('StudioHelper', function() {
   describe('#replaceFiles', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
-    let localTestFiles = [path.join(getFolder('files'), '5mb-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
+    let localTestFiles = [path.join(getFolder('files'), '13m-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
     let studio = new StudioHelper({
       'studio': 'helper.studio.crasman.fi'
     });
