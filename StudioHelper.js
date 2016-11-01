@@ -346,6 +346,24 @@ class StudioHelper {
   }
 
   _showProgressBar(fileName, dataLength) {
+    let columns = process.stdout.columns || 100
+
+    // Workaround for non TTY context
+    if (!process.stderr.cursorTo) {
+      process.stderr.columns = columns;
+      process.stderr.isTTY = true;
+      process.stderr.cursorTo = function (column) {
+        process.stderr.write('\u001b[' + columns + 'D');
+        if (column) {
+          process.stderr.write('\u001b[' + column + 'C');
+        }
+      };
+      process.stderr.clearLine = function () {
+        this.cursorTo(0)
+        process.stderr.write('\u001b[K');
+      };
+    }
+
     return new ProgressBar('[Studio] Uploading ' + fileName + ' [:bar] :percent', {
       'complete': '=',
       'incomplete': ' ',
