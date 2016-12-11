@@ -54,27 +54,6 @@ describe('StudioHelper', function() {
     });
   });
 
-  describe('Prompt test', function () {
-    //let addedTestFolder;
-    let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
-    });
-
-    it('only one prompt should be shown', function () {
-      console.log.reset();
-
-      studio.setAuthToken('');
-      return studio.createDirectoryFolders({
-        'folderId': '57fd20b96c6e79438855b47f',
-        'localFolder': getFolder('folders'),
-        'includeSubFolders': true,
-        'cache': true
-      }).then(function () {
-        console.log.calledWith('[Studio] AuthToken missing').should.equal(true);
-        return should(console.log.calledOnce).equal(true);
-      });
-    });
-  });
 
   describe('#deleteChildFolders', function () {
     it('should delete child folders of a given folderid', function () {
@@ -245,6 +224,19 @@ describe('StudioHelper', function() {
         res.should.have.lengthOf(2);
         res[0].status.should.equal('ok');
         return res[1].status.should.equal('ok');
+      });
+    });
+
+    it('should upload empty files', function () {
+      let studio = new StudioHelper({
+        'studio': 'helper.studio.crasman.fi'
+      });
+
+      let files = [path.join(getFolder('files'), '0-file')];
+
+      return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
+        res.should.have.lengthOf(1);
+        return res[0].status.should.equal('ok');
       });
     });
 
@@ -608,6 +600,28 @@ describe('StudioHelper', function() {
         return studio.deleteFiles(fileIds).then(function (res) {
           return res.result.should.equal(true);
         });
+      });
+    });
+  });
+
+  describe('Prompt test', function () {
+    //let addedTestFolder;
+    let studio = new StudioHelper({
+      'studio': 'helper.studio.crasman.fi'
+    });
+
+    it('only one prompt should be shown', function () {
+      console.log.reset();
+
+      studio.setAuthToken('');
+      return studio.createDirectoryFolders({
+        'folderId': '57fd20b96c6e79438855b47f',
+        'localFolder': getFolder('folders'),
+        'includeSubFolders': true,
+        'cache': true
+      }).then(function () {
+        console.log.calledWith('[Studio] AuthToken missing').should.equal(true);
+        return should(console.log.calledOnce).equal(true);
       });
     });
   });

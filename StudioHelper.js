@@ -764,14 +764,23 @@ class StudioHelper {
 
   getLocalFileInfo(filePath) {
     let stats = fs.statSync(filePath),
+        size = stats.size,
         changed = Math.round(new Date(stats.mtime).getTime() / 1000),
         data = fs.readFileSync(filePath),
-        sha1 = require('crypto').createHash('sha1').update(data).digest('hex'),
-        type = mime.lookup(filePath);
+        type = mime.lookup(filePath),
+        sha1;
+
+    // Studio doesn't let you upload empty files, se we add one space as content
+    if (data.length === 0) {
+      data = ' ';
+      size = 1;
+    }
+
+    sha1 = require('crypto').createHash('sha1').update(data).digest('hex');
 
     return {
       'type': type,
-      'size': stats.size,
+      'size': size,
       'changed': changed,
       'sha1': sha1,
       'data': data
