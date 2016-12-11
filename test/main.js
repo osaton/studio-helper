@@ -52,7 +52,29 @@ describe('StudioHelper', function() {
       uploadFiles[0].should.have.property('data').which.is.an.instanceOf(Buffer);
       uploadFiles[0].folderId.should.equal('someMadeUpFolder');
     });
-  })
+  });
+
+  describe('Prompt test', function () {
+    //let addedTestFolder;
+    let studio = new StudioHelper({
+      'studio': 'helper.studio.crasman.fi'
+    });
+
+    it('only one prompt should be shown', function () {
+      console.log.reset();
+
+      studio.setAuthToken('');
+      return studio.createDirectoryFolders({
+        'folderId': '57fd20b96c6e79438855b47f',
+        'localFolder': getFolder('folders'),
+        'includeSubFolders': true,
+        'cache': true
+      }).then(function () {
+        console.log.calledWith('[Studio] AuthToken missing').should.equal(true);
+        return should(console.log.calledOnce).equal(true);
+      });
+    });
+  });
 
   describe('#deleteChildFolders', function () {
     it('should delete child folders of a given folderid', function () {

@@ -16,6 +16,7 @@ const API_URL = '/studioapi/v2/',
       MAX_CONCURRENT_CONNECTIONS = 1,
       CREDENTIALS_FILE = '.studio-credentials',
       IGNORE_FILE = '.studio-ignore',
+      //PROMPT_EXPIRE_TIME = 120000,
       LONG_SESSION = 1;
 
 /**
@@ -56,6 +57,10 @@ class StudioHelper {
     this.authToken = '';
 
     this.inquirer = require('inquirer');
+    this.prompt = this.inquirer.createPromptModule();
+
+    this.loginPromptLimiterTimeout = 3000;
+    this.loginPromptShownTime = null;
 
     this.ignore = null;
 
@@ -324,15 +329,17 @@ class StudioHelper {
       case 19:
       case 18:
         // Log results text if not successfull
-        self._log(results.result);
+        if (!this.promptVisible) {
+          self._log(results.result);
+        }
+
         if (!this.loginPromptEnabled) {
           return Promise.reject(results);
         }
+
         return this._showLoginPrompt().then(function() {
           return lastCall.apply(self, args);
         });
-
-        break;
     }
 
 
@@ -577,9 +584,12 @@ class StudioHelper {
 
     return new Promise(function(resolve) {
       let showPrompt;
+      let promptCheck;
 
       showPrompt = function() {
-        self.inquirer.prompt(self.promptSchema).then(function(result) {
+        self.promptVisible = true;
+
+        self.prompt(self.promptSchema).then(function(result) {
           if (!result) {
             return;
           }
@@ -592,7 +602,7 @@ class StudioHelper {
               });
 
               self.setAuthToken(res.result.authToken);
-
+              self.promptVisible = false;
               resolve(res);
             } else {
               // Show error
@@ -605,7 +615,22 @@ class StudioHelper {
         });
       }
 
-      showPrompt();
+      promptCheck = function() {
+        setTimeout(() => {
+          //console.log('setTimeout');
+          if (!self.promptVisible) {
+            resolve();
+          } else {
+            promptCheck();
+          }
+        }, 100);
+      }
+
+      if (self.promptVisible) {
+        promptCheck();
+      } else {
+        showPrompt();
+      }
     });
   }
 
@@ -1256,10 +1281,8 @@ class StudioHelper {
       switch (file.action) {
         case 'upload':
           return self.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder);
-          break;
         case 'replace':
           return self.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder);
-          break;
       }
     });
 
