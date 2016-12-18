@@ -73,13 +73,26 @@ class StudioHelper {
       this.setProxy(settings.proxy);
     }
 
+    if (settings.credentialsFile) {
+      this.credentialsFile = settings.credentialsFile;
+    } else {
+      this.credentialsFile = CREDENTIALS_FILE;
+    }
+
+    this.credentials = this._getCredentials();
+
+    if (this.credentials && this.credentials.authToken) {
+      this.setAuthToken(this.credentials.authToken);
+    }
+
     if (settings.promptSchema) {
       this.promptSchema = settings.promptSchema;
     } else {
       this.promptSchema = [{
         'message': 'Username',
         'type': 'input',
-        'name': 'name'
+        'name': 'name',
+        'default': this.credentials && this.credentials.username || ''
       }, {
         'message': 'Password',
         'type': 'password',
@@ -91,26 +104,14 @@ class StudioHelper {
       }];
     }
 
-    if (settings.credentialsFile) {
-      this.credentialsFile = settings.credentialsFile;
-    } else {
-      this.credentialsFile = CREDENTIALS_FILE;
-    }
-
     if (settings.ignoreFile) {
       this.ignoreFile = settings.ignoreFile;
     } else {
       this.ignoreFile = IGNORE_FILE;
     }
 
-    this.credentials = this._getCredentials();
-
     if (this.ignoreFile) {
       this._addToIgnore(this.ignoreFile);
-    }
-
-    if (this.credentials && this.credentials.authToken) {
-      this.setAuthToken(this.credentials.authToken);
     }
 
     if (settings.loginPromptEnabled) {
