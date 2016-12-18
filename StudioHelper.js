@@ -1,13 +1,15 @@
 'use strict';
 
-let request = require('request'),
-    mime = require('mime-types'),
-    Promise = require('bluebird'),
-    fs = require('fs'),
-    path = require('path'),
-    ignore = require('ignore'),
-    throat = require('throat')(Promise),
-    ProgressBar = require('progress');
+const request = require('request'),
+      mime = require('mime-types'),
+      Promise = require('bluebird'),
+      fs = require('fs'),
+      path = require('path'),
+      os = require('os'),
+      Cryptr = require('cryptr'),
+      ignore = require('ignore'),
+      throat = require('throat')(Promise),
+      ProgressBar = require('progress');
 
 Promise.longStackTraces();
 
@@ -15,6 +17,7 @@ const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = 4000000,
       MAX_CONCURRENT_CONNECTIONS = 1,
       CREDENTIALS_FILE = '.studio-credentials',
+      CREDENTIALS_SECRET_BASE = 'not/that/secret/by/itself/!:(',
       IGNORE_FILE = '.studio-ignore',
       //PROMPT_EXPIRE_TIME = 120000,
       LONG_SESSION = 1;
@@ -53,6 +56,8 @@ class StudioHelper {
       throw Error('StudioHelper#constructor: settings.studio must be set');
     }
 
+    this.credentialsSecret = this._createCredentialsSecret(CREDENTIALS_SECRET_BASE);
+    this.cryptr = new Cryptr(this.credentialsSecret);
     this.apiUrl = 'https://' + settings.studio + API_URL;
     this.authToken = '';
 
@@ -125,12 +130,54 @@ class StudioHelper {
   /**
    * @private
    */
+  _getFirstMac() {
+    let allowed = ['eth0', 'eth1', 'en0', 'en1'];
+    let interfaces = os.networkInterfaces();
+
+    for (let iface in interfaces) {
+      if (interfaces.hasOwnProperty(iface)) {
+        let interfaceArr = interfaces[iface];
+
+        if (allowed.indexOf(iface) !== -1) {
+          for (let i = 0, l = interfaceArr.length; i<l; i++) {
+            let addressData = interfaceArr[i];
+
+            if (!addressData.internal && addressData.mac) {
+              return addressData.mac;
+            }
+          }
+        }
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * @private
+   */
+  _createCredentialsSecret(secretBase) {
+    // Include mac address in secret
+    let mac = this._getFirstMac();
+    // And current path for little bit of extra secrecy :P
+    let currentDir = __dirname;
+
+    return secretBase + mac + currentDir;
+  }
+
+  /**
+   * @private
+   */
   _getCredentials() {
     let data = null;
 
     try {
       data = JSON.parse(fs.readFileSync(this.credentialsFile, 'utf8'));
     } catch (e) {
+    }
+
+    if (data) {
+      data = this._getDecryptedData(data);
     }
 
     return data;
@@ -484,12 +531,51 @@ class StudioHelper {
       return memo.concat(items);
     }, []);
   }
+  /**
+   * @private
+   */
+  _getEncryptedData(data) {
+    let encryptedData = null;
+    for (let key in data) {
+      if (data.hasOwnProperty(key)) {
+        if (!encryptedData) {
+          encryptedData = {};
+        }
+
+        encryptedData[key] = this.cryptr.encrypt(data[key]);
+      }
+    }
+    return encryptedData;
+  }
+
+  /**
+   * @private
+   */
+  _getDecryptedData(data) {
+    let decryptedData = null;
+
+    try {
+      for (let key in data) {
+        if (data.hasOwnProperty(key)) {
+          if (!decryptedData) {
+            decryptedData = {};
+          }
+
+          decryptedData[key] = this.cryptr.decrypt(data[key]);
+        }
+      }
+    } catch (e) {}
+
+    return decryptedData;
+  }
 
   /**
    * @private
    */
   _updateCredentials(data) {
     let self = this;
+
+    data = this._getEncryptedData(data);
 
     fs.writeFile(this.credentialsFile, JSON.stringify(data), function(err) {
       if (err) {
@@ -542,6 +628,7 @@ class StudioHelper {
       }
     });
   }
+
 
   /**
    * Create folders found in local directory if not already created
@@ -596,12 +683,13 @@ class StudioHelper {
 
           return self.login(result.name, result.password, result.token, LONG_SESSION).then(function(res) {
             if (res.status === 'ok') {
+              self.setAuthToken(res.result.authToken);
+
               self._updateCredentials({
                 'authToken': res.result.authToken,
                 'username': result.name
               });
 
-              self.setAuthToken(res.result.authToken);
               self.promptVisible = false;
               resolve(res);
             } else {
