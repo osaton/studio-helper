@@ -1,4 +1,5 @@
 /test/
 /examples/
+/node_modules/
 .studio-credentials
 npm-debug.log
