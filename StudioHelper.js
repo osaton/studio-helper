@@ -11,7 +11,7 @@ const request = require('request'),
       throat = require('throat')(Promise),
       ProgressBar = require('progress');
 
-Promise.longStackTraces();
+//Promise.longStackTraces();
 
 const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = 4000000,
