@@ -160,10 +160,17 @@ class StudioHelper {
   _createCredentialsSecret(secretBase) {
     // Include mac address in secret
     let mac = this._getFirstMac();
-    // And current path for little bit of extra secrecy :P
-    let currentDir = __dirname;
+    // Add parts of current path for little bit of extra secrecy :P
+    let currentDirParts = __dirname.split('').map((l,i) => (i + 1) % 3 ? l : '').join('');
+    // And cpu model
+    let cpuModel = '';
 
-    return secretBase + mac + currentDir;
+    let cpus = os.cpus();
+    if (cpus && cpus.length) {
+      cpuModel = cpus[0].model;
+    }
+
+    return secretBase + mac + currentDirParts + cpuModel;
   }
 
   /**
