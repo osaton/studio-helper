@@ -561,6 +561,7 @@ class StudioHelper {
    */
   _getDecryptedData(data) {
     let decryptedData = null;
+    let decrypted = false;
 
     try {
       for (let key in data) {
@@ -570,11 +571,16 @@ class StudioHelper {
           }
 
           decryptedData[key] = this.cryptr.decrypt(data[key]);
+
+          // Test that authToken is formatted correctly
+          if (key === 'authToken' && /^[\w:\-]+$/.test(decryptedData[key])) {
+            decrypted = true;
+          }
         }
       }
     } catch (e) {}
 
-    return decryptedData;
+    return decrypted ? decryptedData : null;
   }
 
   /**
