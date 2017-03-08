@@ -1385,11 +1385,11 @@ class StudioHelper {
    * @param {FolderSettings} settings
    * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
    */
-  /*updateFolderSettings(folderId, settings) {
+  updateFolderSettings(folderId, settings) {
     console.log(folderId, settings);
 
     return this._post('folderSettings/' + folderId, settings);
-  }*/
+  }
 
   /**
    * Get folders

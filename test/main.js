@@ -97,7 +97,7 @@ describe('StudioHelper', function() {
     });*/
   });
 
-  /*describe('#updateFolderSettings', function () {
+  describe('#updateFolderSettings', function () {
     let studio = new StudioHelper({
       'studio': 'helper.studio.crasman.fi'
     });
@@ -129,7 +129,7 @@ describe('StudioHelper', function() {
         });
       });
     })
-  });*/
+  });
 
   describe('#getFolders', function () {
     let addedTestFolder;
