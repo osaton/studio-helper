@@ -1358,6 +1358,40 @@ class StudioHelper {
   }
 
   /**
+   * @typedef {Object} FolderSettings
+   * @property {integer} fileCacheMaxAge Cache time in seconds
+   * @property {boolean} fileCacheProtected Can cache time be changed
+   * @property {boolean} apiFolder API folders can not be modified in Studio GUI
+   * @property {boolean} noversioning
+   * @property {string|boolean} public Public folder path, false if not public
+   */
+
+  /**
+   * Get folder settings
+   * @async Returns Promise
+   * @private for now
+   * @param {string} folderId
+   * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
+   */
+  getFolderSettings(folderId) {
+    return this._get('folderSettings', folderId);
+  }
+
+  /**
+   * Update folder settings
+   * @async Returns Promise
+   * @private for now
+   * @param {string} folderId
+   * @param {FolderSettings} settings
+   * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
+   */
+  /*updateFolderSettings(folderId, settings) {
+    console.log(folderId, settings);
+
+    return this._post('folderSettings/' + folderId, settings);
+  }*/
+
+  /**
    * Get folders
    *
    * @private for now

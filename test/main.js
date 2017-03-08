@@ -5,6 +5,7 @@ const should = require('should'),
       path = require('path'),
       Promise = require('bluebird'),
       mainFolder = '57fd20b96c6e79438855b47f',
+      //publicFolder = '58c035c22b089f11379fa5a9',
       testFolder1 = '57fa91c86c6e79d9761b0a4e',
       testFolder2 = '57fa91cd6c6e790b7d1b0a4e';
 
@@ -67,22 +68,69 @@ describe('StudioHelper', function() {
     });
   });
 
-  /*
-  // Maybe someday
-  describe('#getFolderDetails', function () {
-    it('should get folder details', function () {
-      let studio = new StudioHelper({
-        studio: 'helper.studio.crasman.fi'
-      });
-
-      return studio.getFolderDetails(mainFolder).then(function (res) {
-        console.log(res);
-        return res.status.should.be('ok');
-      });
-
+  describe('#getFolderSettings', function () {
+    let studio = new StudioHelper({
+      'studio': 'helper.studio.crasman.fi'
     });
+
+    it('should get folder settings', function () {
+      return studio.getFolderSettings(mainFolder).then(function (res) {
+        res.result.fileCacheMaxAge.should.be.type('number');
+        res.result.fileCacheProtected.should.be.type('boolean');
+        res.result.apiFolder.should.be.type('boolean');
+        res.result.noversioning.should.be.type('boolean');
+        res.result.public.should.be.type('boolean');
+        return res.status.should.equal('ok');
+      });
+    });
+    /*
+    it('should return public path, if available', function () {
+      return studio.getFolderSettings(publicFolder).then(function (res) {
+        console.log(res);
+        res.result.fileCacheMaxAge.should.be.type('number');
+        res.result.fileCacheProtected.should.be.type('boolean');
+        res.result.apiFolder.should.be.type('boolean');
+        res.result.noversioning.should.be.type('boolean');
+        res.result.public.should.be.type('string');
+        return res.status.should.equal('ok');
+      });
+    });*/
   });
-  */
+
+  /*describe('#updateFolderSettings', function () {
+    let studio = new StudioHelper({
+      'studio': 'helper.studio.crasman.fi'
+    });
+
+    it('should change settings', function () {
+      return studio.getFolderSettings(mainFolder).then(function (res) {
+        let originalSettings = res.result;
+        let newSettings = JSON.parse(JSON.stringify(originalSettings));
+
+        delete newSettings.public;
+
+        res.result.fileCacheMaxAge.should.be.type('number');
+        res.result.fileCacheProtected.should.be.type('boolean');
+        res.result.apiFolder.should.be.type('boolean');
+        res.result.noversioning.should.be.type('boolean');
+
+        newSettings.fileCacheMaxAge = originalSettings.fileCacheMaxAge > 0 ? 0 : 1000;
+        newSettings.fileCacheProtected = originalSettings.fileCacheProtected ? false : true;
+        newSettings.apiFolder = originalSettings.apiFolder ? false : true;
+        newSettings.noversioning = originalSettings.noversioning ? false : true;
+
+        return studio.updateFolderSettings(mainFolder, newSettings).then(function (res) {
+          res.result.fileCacheMaxAge.should.not.equal(originalSettings.fileCacheMaxAge);
+          res.result.fileCacheProtected.should.not.equal(originalSettings.fileCacheProtected);
+          res.result.apiFolder.should.not.equal(originalSettings.apiFolder);
+          res.result.noversioning.should.not.equal(originalSettings.noversioning);
+
+          return res.status.should.equal('ok');
+        });
+      });
+    })
+  });*/
+
   describe('#getFolders', function () {
     let addedTestFolder;
     let studio = new StudioHelper({
