@@ -1359,11 +1359,20 @@ class StudioHelper {
 
   /**
    * @typedef {Object} FolderSettings
-   * @property {integer} fileCacheMaxAge Cache time in seconds
+   * @property {number} fileCacheMaxAge Cache time in seconds
    * @property {boolean} fileCacheProtected Can cache time be changed
    * @property {boolean} apiFolder API folders can not be modified in Studio GUI
    * @property {boolean} noversioning
-   * @property {string|boolean} public Public folder path, false if not public
+   * @property {boolean} public Public folder path, false if not public
+   */
+
+  /**
+   * @typedef {Object} FolderUpdateSettings
+   * @property {number} fileCacheMaxAge Cache time in seconds
+   * @property {number} fileCacheProtected Can cache time be changed (0 or 1)
+   * @property {number} apiFolder API folders can not be modified in Studio GUI (0 or 1)
+   * @property {number} noversioning (0 or 1)
+   * @property {number} public Public folder path, false if not public (0 or 1)
    */
 
   /**
@@ -1374,7 +1383,32 @@ class StudioHelper {
    * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
    */
   getFolderSettings(folderId) {
-    return this._get('folderSettings', folderId);
+    return this._get('folderSettings', folderId).then(function (res) {
+      /*const items = res.result;
+
+
+      if (!items) {
+        return Promise.resolve(res);
+      }
+
+      // updateFolderSettings method converts all settings to strings. Change them back to numbers from strings and booleans if needed
+      for (let key in items) {
+        if (items.hasOwnProperty(key)) {
+          try {
+            items[key] = JSON.parse(items[key]);
+
+            // Convert booleans to 1 or 1
+            if (items[key] === true || items[key] === false) {
+              items[key] = items[key] ? 1 : 0;
+            }
+          } catch (e) {
+            // If this is actually string, don't change anything
+          }
+        }
+      }*/
+
+      return Promise.resolve(res);
+    });
   }
 
   /**
@@ -1382,12 +1416,10 @@ class StudioHelper {
    * @async Returns Promise
    * @private for now
    * @param {string} folderId
-   * @param {FolderSettings} settings
-   * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
+   * @param {FolderUpdateSettings} settings
+   * @returns {ResultObj}
    */
   updateFolderSettings(folderId, settings) {
-    console.log(folderId, settings);
-
     return this._post('folderSettings/' + folderId, settings);
   }
 
