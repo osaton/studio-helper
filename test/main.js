@@ -496,7 +496,7 @@ describe('StudioHelper', function() {
         });
       });
 
-      it('should create and push files to multiple folders', function () {
+      it('should push files to multiple folders', function () {
         let studio = new StudioHelper({
           'studio': 'helper.studio.crasman.fi'
         });
@@ -545,6 +545,33 @@ describe('StudioHelper', function() {
           console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
           return res.should.have.lengthOf(10);
+        })
+      });
+
+      it.only('createdFolderCacheMaxAge: should create folders, update folder settings with correct cache times and push to them', function () {
+        console.log.reset();
+        return studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1/subfolder1'),
+            'includeSubFolders': true,
+            'createdFolderSettings': {
+              '/subsubfolder1': {
+                'fileCacheMaxAge': 1000
+              },
+              '/subsubfolder2/subsubsubfolder1': {
+                'fileCacheMaxAge': 2
+              }
+            }
+          }]
+        }).then(function (res) {
+          console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder1 => { cacheMaxAge: 1000 }').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subsubfolder2 => { cacheMaxAge: 2 }').should.equal(false);
+          console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => { cacheMaxAge: 2 }').should.equal(true);
+          return res.should.have.lengthOf(3);
         })
       });
 
@@ -624,7 +651,7 @@ describe('StudioHelper', function() {
         });
       });
     });
-  });
+  })
 
   describe('#deleteFiles', function () {
     it('should delete files', function () {

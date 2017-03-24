@@ -603,12 +603,41 @@ class StudioHelper {
     let localFolders = self.getLocalFolders(folderData.localFolder);
     let folderJobs = [];
 
+    //console.log(folderData);
+
+    let getFolderSettings = function (localFolder, folderName, allSettings) {
+      //console.log('getting settings');
+      //console.log(folderData);
+
+      if (!allSettings) {
+        return null;
+      }
+
+      let folderPath = path.join(localFolder, folderName);
+
+      for (let key in allSettings) {
+        if (allSettings.hasOwnProperty(key)) {
+          let regEx = new RegExp(key);
+
+          // Return first matching result
+          if (regEx.test(folderPath)) {
+            return allSettings[key];
+          }
+        }
+      }
+
+      //console.log(allSettings);
+
+      return null;
+    }
+
     for (let i=0, l=localFolders.length; i<l; i++) {
       folderJobs.push(this.createFolder({
         'parentId': folderData.folderId,
         'name': localFolders[i],
         'localFolder': folderData.localFolder,
         'logCreated': folderData.logCreated,
+        'folderSettings': getFolderSettings(folderData.localFolder, localFolders[i], folderData.createdFolderSettings),
         'addIfExists': false
       }));
     }
@@ -623,6 +652,8 @@ class StudioHelper {
             'folderId': folder.id,
             'localFolder': path.join(folderData.localFolder, folder.name),
             'logCreated': folderData.logCreated,
+            'createdFolderSettings': folderData.createdFolderSettings,
+            //'folderSettings': getFolderSettings(folderData.localFolder, folder.name, folderData.createdFolderSettings),
             'includeSubFolders': true
           }));
         }
@@ -661,7 +692,8 @@ class StudioHelper {
     if (!this._createDirectoryFolderCache) {
       this._createDirectoryFolderCache = {};
     }
-
+    //console.log(folderData);
+    //console.log('je');
     // If data has been cached already, resolve
     if (this._createDirectoryFolderCache[folderData.folderId]) {
       return Promise.resolve(this._createDirectoryFolderCache[folderData.folderId]);
@@ -760,6 +792,18 @@ class StudioHelper {
    *   }, {
    *     folderId: '568a7a27add453aa1a4f4f58',
    *     localFolder: 'dist/css'
+   *   }, {
+   *     folderId: '568a7a27add453aa1a4f4f58',
+   *     localFolder: 'dist/',
+   *     includeSubFolders: true,
+   *     createdFolderSettings: {
+   *       'dist/master': { // Regex match
+   *         cacheMaxAge: 64800
+   *       },
+   *       'dist/dev': {  // Regex match
+   *         cacheMaxAge: 2
+   *       }
+   *     }
    *   }]
    * }).then(function (res) {
    *   console.log(res.length + 'files uploaded');
@@ -770,6 +814,7 @@ class StudioHelper {
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
    * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
+   * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (glob pattern) as keys and FolderUpdateSettings object as value. See example.
    * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
@@ -778,6 +823,7 @@ class StudioHelper {
 
     for (let i=settings.folders.length-1; i>=0; i--) {
       let folderData = settings.folders[i];
+
       if (folderData.includeSubFolders) {
         folderData.logCreated = true;
         folderData.includeSubFolders = true;
@@ -791,6 +837,15 @@ class StudioHelper {
       let pushFolders = [];
 
       createdFolders.forEach(function (folderRes) {
+        //console.log(folderRes);
+        /*if (cacheTimes) {
+          for (let key in cacheTimes) {
+            if (cacheTimes.hasOwnProperty(key)) {
+              console.log(key);
+              console.log(folderData);
+            }
+          }
+        }*/
         pushFolders.push({
           'folderId': folderRes.result.id,
           'localFolder': folderRes.result.localFolder
@@ -1220,6 +1275,7 @@ class StudioHelper {
    * @param {boolean} [settings.addIfExists=true] - Return the already created folder id if false
    * @param {string} [settings.localFolder] - local folder path
    * @param {boolean} [settings.logCreated=false] - log created folders
+   * @param {FolderUpdateSettings} [settings.folderSettings] - folder settings to apply after creation
    * @returns {ResultObj} [ResultObj.result]{@link CreateFolderResult}
    */
   createFolder(settings) {
@@ -1229,7 +1285,10 @@ class StudioHelper {
     let localFolderPath = settings.localFolder || '';
     let addIfExists = settings.addIfExists === false ? false : true;
     let logging = settings.logCreated === true ? true : false;
+    let folderSettings = settings.folderSettings;
     let apipath = 'folders/' + parentId;
+
+    console.log(localFolderPath);
 
     if (addIfExists) {
       return this._post(apipath, {
@@ -1249,6 +1308,10 @@ class StudioHelper {
 
           if (logging) {
             self._log('Created folder: ' + folderName);
+          }
+
+          if (folderSettings) {
+            self.updateFolderSettings(res.result, folderSettings);
           }
         } else {
           resData = res;
@@ -1297,6 +1360,10 @@ class StudioHelper {
 
             if (logging) {
               self._log('Created folder: ' + folderName);
+            }
+
+            if (folderSettings) {
+              self.updateFolderSettings(res.result, folderSettings);
             }
           } else {
             resData = res;
@@ -1416,10 +1483,12 @@ class StudioHelper {
    * @async Returns Promise
    * @private for now
    * @param {string} folderId
-   * @param {FolderUpdateSettings} settings
+   * @param {FolderUpdateSettings} folder settings
    * @returns {ResultObj}
    */
   updateFolderSettings(folderId, settings) {
+    console.log('updating folder settings');
+    console.log(folderId, settings);
     return this._post('folderSettings/' + folderId, settings);
   }
 
