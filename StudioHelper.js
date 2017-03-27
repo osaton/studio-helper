@@ -603,12 +603,7 @@ class StudioHelper {
     let localFolders = self.getLocalFolders(folderData.localFolder);
     let folderJobs = [];
 
-    //console.log(folderData);
-
     let getFolderSettings = function (localFolder, folderName, allSettings) {
-      //console.log('getting settings');
-      //console.log(folderData);
-
       if (!allSettings) {
         return null;
       }
@@ -625,8 +620,6 @@ class StudioHelper {
           }
         }
       }
-
-      //console.log(allSettings);
 
       return null;
     }
@@ -704,8 +697,7 @@ class StudioHelper {
     if (!this._createDirectoryFolderCache) {
       this._createDirectoryFolderCache = {};
     }
-    //console.log(folderData);
-    //console.log('je');
+
     // If data has been cached already, resolve
     if (this._createDirectoryFolderCache[folderData.folderId]) {
       return Promise.resolve(this._createDirectoryFolderCache[folderData.folderId]);
@@ -763,7 +755,6 @@ class StudioHelper {
 
       promptCheck = function() {
         setTimeout(() => {
-          //console.log('setTimeout');
           if (!self.promptVisible) {
             resolve();
           } else {
@@ -849,15 +840,6 @@ class StudioHelper {
       let pushFolders = [];
 
       createdFolders.forEach(function (folderRes) {
-        //console.log(folderRes);
-        /*if (cacheTimes) {
-          for (let key in cacheTimes) {
-            if (cacheTimes.hasOwnProperty(key)) {
-              console.log(key);
-              console.log(folderData);
-            }
-          }
-        }*/
         pushFolders.push({
           'folderId': folderRes.result.id,
           'localFolder': folderRes.result.localFolder
