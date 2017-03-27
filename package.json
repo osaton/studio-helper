@@ -1,6 +1,6 @@
 {
   "name": "studio-helper",
-  "version": "1.6.5",
+  "version": "1.7.0",
   "description": "Crasman Studio API Helper",
   "main": "StudioHelper.js",
   "scripts": {
