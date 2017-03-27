@@ -639,6 +639,18 @@ class StudioHelper {
         'logCreated': folderData.logCreated,
         'folderSettings': getFolderSettings(folderData.localFolder, localFolders[i], folderData.createdFolderSettings),
         'addIfExists': false
+      }).then(function (res) {
+        // If we have settings for this newly created folder, update them now
+        let folderSettings = getFolderSettings(folderData.localFolder, localFolders[i], folderData.createdFolderSettings);
+
+        if (folderSettings) {
+          return self.updateFolderSettings(res.result.id, folderSettings, { 'log': folderData.logCreated, 'folderName': localFolders[i] }).then(function () {
+            // Return the original createFolder res, not update result
+            return res;
+          });
+        }
+
+        return Promise.resolve(res);
       }));
     }
 
@@ -1285,10 +1297,7 @@ class StudioHelper {
     let localFolderPath = settings.localFolder || '';
     let addIfExists = settings.addIfExists === false ? false : true;
     let logging = settings.logCreated === true ? true : false;
-    let folderSettings = settings.folderSettings;
     let apipath = 'folders/' + parentId;
-
-    console.log(localFolderPath);
 
     if (addIfExists) {
       return this._post(apipath, {
@@ -1308,10 +1317,6 @@ class StudioHelper {
 
           if (logging) {
             self._log('Created folder: ' + folderName);
-          }
-
-          if (folderSettings) {
-            self.updateFolderSettings(res.result, folderSettings);
           }
         } else {
           resData = res;
@@ -1360,10 +1365,6 @@ class StudioHelper {
 
             if (logging) {
               self._log('Created folder: ' + folderName);
-            }
-
-            if (folderSettings) {
-              self.updateFolderSettings(res.result, folderSettings);
             }
           } else {
             resData = res;
@@ -1451,30 +1452,7 @@ class StudioHelper {
    */
   getFolderSettings(folderId) {
     return this._get('folderSettings', folderId).then(function (res) {
-      /*const items = res.result;
-
-
-      if (!items) {
-        return Promise.resolve(res);
-      }
-
-      // updateFolderSettings method converts all settings to strings. Change them back to numbers from strings and booleans if needed
-      for (let key in items) {
-        if (items.hasOwnProperty(key)) {
-          try {
-            items[key] = JSON.parse(items[key]);
-
-            // Convert booleans to 1 or 1
-            if (items[key] === true || items[key] === false) {
-              items[key] = items[key] ? 1 : 0;
-            }
-          } catch (e) {
-            // If this is actually string, don't change anything
-          }
-        }
-      }*/
-
-      return Promise.resolve(res);
+      return res;
     });
   }
 
@@ -1483,13 +1461,34 @@ class StudioHelper {
    * @async Returns Promise
    * @private for now
    * @param {string} folderId
-   * @param {FolderUpdateSettings} folder settings
+   * @param {FolderUpdateSettings} folderSettings settings
+   * @param {Object} [options]
+   * @param {boolean} [options.log=false] log results
+   * @param {string} [options.folderName=''] used for logging
    * @returns {ResultObj}
    */
-  updateFolderSettings(folderId, settings) {
-    console.log('updating folder settings');
-    console.log(folderId, settings);
-    return this._post('folderSettings/' + folderId, settings);
+  updateFolderSettings(folderId, folderSettings, options) {
+    let self = this;
+    let opt = {
+      'log': false,
+      'folderName': ''
+    }
+
+    if (options) {
+      for (let key in options) {
+        if (options.hasOwnProperty(key)) {
+          opt[key] = options[key]
+        }
+      }
+    }
+
+    return this._post('folderSettings/' + folderId, folderSettings).then(function (res) {
+      if (opt.log) {
+        self._log('Updated folder: ' + opt.folderName + ' => ' + JSON.stringify(folderSettings));
+      }
+
+      return res;
+    });
   }
 
   /**
