@@ -12,6 +12,10 @@
 <dd></dd>
 <dt><a href="#CreateFolderResult">CreateFolderResult</a> : <code>Object</code></dt>
 <dd></dd>
+<dt><a href="#FolderSettings">FolderSettings</a> : <code>Object</code></dt>
+<dd></dd>
+<dt><a href="#FolderUpdateSettings">FolderUpdateSettings</a> : <code>Object</code></dt>
+<dd></dd>
 </dl>
 
 <a name="StudioHelper"></a>
@@ -93,6 +97,7 @@ Push changes to Studio
 | settings.folders[].folderId | <code>string</code> |  | Studio folder id |
 | settings.folders[].localFolder | <code>string</code> |  | Local folder path |
 | [settings.folders[].includeSubFolders] | <code>boolean</code> | <code>false</code> | Create and upload sub folders |
+| [settings.folders[].createdFolderSettings] | <code>Object</code> | <code></code> | Object with paths (glob pattern) as keys and FolderUpdateSettings object as value. See example. |
 
 **Example**
 ```js
@@ -103,6 +108,18 @@ studio.push({
   }, {
     folderId: '568a7a27add453aa1a4f4f58',
     localFolder: 'dist/css'
+  }, {
+    folderId: '568a7a27add453aa1a4f4f58',
+    localFolder: 'dist/',
+    includeSubFolders: true,
+    createdFolderSettings: {
+      'dist/master': { // Regex match
+        cacheMaxAge: 64800
+      },
+      'dist/dev': {  // Regex match
+        cacheMaxAge: 2
+      }
+    }
   }]
 }).then(function (res) {
   console.log(res.length + 'files uploaded');
@@ -125,6 +142,7 @@ Create folder
 | [settings.addIfExists] | <code>boolean</code> | <code>true</code> | Return the already created folder id if false |
 | [settings.localFolder] | <code>string</code> |  | local folder path |
 | [settings.logCreated] | <code>boolean</code> | <code>false</code> | log created folders |
+| [settings.folderSettings] | <code>[FolderUpdateSettings](#FolderUpdateSettings)</code> |  | folder settings to apply after creation |
 
 <a name="ResultObj"></a>
 
@@ -149,3 +167,31 @@ Create folder
 | id | <code>string</code> | Created folder id |
 | name | <code>string</code> | Local folder name, might be different in Studio |
 | localFolder | <code>string</code> | Local folder path |
+
+<a name="FolderSettings"></a>
+
+## FolderSettings : <code>Object</code>
+**Kind**: global typedef
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| fileCacheMaxAge | <code>number</code> | Cache time in seconds |
+| fileCacheProtected | <code>boolean</code> | Can cache time be changed |
+| apiFolder | <code>boolean</code> | API folders can not be modified in Studio GUI |
+| noversioning | <code>boolean</code> |  |
+| public | <code>boolean</code> | Public folder |
+
+<a name="FolderUpdateSettings"></a>
+
+## FolderUpdateSettings : <code>Object</code>
+**Kind**: global typedef
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| fileCacheMaxAge | <code>number</code> | Cache time in seconds |
+| fileCacheProtected | <code>number</code> | Can cache time be changed (0 or 1) |
+| apiFolder | <code>number</code> | API folders can not be modified in Studio GUI (0 or 1) |
+| noversioning | <code>number</code> | (0 or 1) |
+| public | <code>number</code> | Public folder |

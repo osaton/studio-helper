@@ -1431,7 +1431,7 @@ class StudioHelper {
    * @property {boolean} fileCacheProtected Can cache time be changed
    * @property {boolean} apiFolder API folders can not be modified in Studio GUI
    * @property {boolean} noversioning
-   * @property {boolean} public Public folder path, false if not public
+   * @property {boolean} public Public folder
    */
 
   /**
@@ -1440,7 +1440,7 @@ class StudioHelper {
    * @property {number} fileCacheProtected Can cache time be changed (0 or 1)
    * @property {number} apiFolder API folders can not be modified in Studio GUI (0 or 1)
    * @property {number} noversioning (0 or 1)
-   * @property {number} public Public folder path, false if not public (0 or 1)
+   * @property {number} public Public folder
    */
 
   /**
