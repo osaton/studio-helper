@@ -548,7 +548,7 @@ describe('StudioHelper', function() {
         })
       });
 
-      it.only('createdFolderCacheMaxAge: should create folders, update folder settings with correct cache times and push to them', function () {
+      it('createdFolderSettings: should create folders, update folder settings with correct cache times and push to them', function () {
         console.log.reset();
         return studio.push({
           'folders': [{
@@ -566,11 +566,11 @@ describe('StudioHelper', function() {
           }]
         }).then(function (res) {
           console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
-          console.log.calledWith('[Studio] Updated folder: subsubfolder1 => { cacheMaxAge: 1000 }').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
-          console.log.calledWith('[Studio] Created folder: subsubfolder2 => { cacheMaxAge: 2 }').should.equal(false);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder2 => {"fileCacheMaxAge":2}').should.equal(false);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
-          console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => { cacheMaxAge: 2 }').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => {"fileCacheMaxAge":2}').should.equal(true);
           return res.should.have.lengthOf(3);
         })
       });
