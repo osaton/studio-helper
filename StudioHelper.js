@@ -610,7 +610,12 @@ class StudioHelper {
 
       let folderPath = path.join(localFolder, folderName);
 
-      for (let key in allSettings) {
+      // Use this for correct order of enumerable keys
+      let keys = Object.getOwnPropertyNames(allSettings);
+
+      for (let i=0, l=keys.length; i<l; i++) {
+        let key = keys[i];
+
         if (allSettings.hasOwnProperty(key)) {
           let regEx = new RegExp(key);
 
