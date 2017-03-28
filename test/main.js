@@ -575,6 +575,57 @@ describe('StudioHelper', function() {
         })
       });
 
+      it('createdFolderSettings: should not create or update folders again', function () {
+        console.log.reset();
+        return studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1/subfolder1'),
+            'includeSubFolders': true,
+            'createdFolderSettings': {
+              '/subsubfolder1': {
+                'fileCacheMaxAge': 1000
+              },
+              '/subsubfolder2/subsubsubfolder1': {
+                'fileCacheMaxAge': 2
+              }
+            }
+          }]
+        }).then(function (res) {
+          console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder2 => {"fileCacheMaxAge":2}').should.equal(false);
+          console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => {"fileCacheMaxAge":2}').should.equal(true);
+          console.log.reset();
+          res.should.have.lengthOf(3);
+          return studio.push({
+            'folders': [{
+              'folderId': addedPushFolder,
+              'localFolder': getFolder('folders/testfolder1/subfolder1'),
+              'includeSubFolders': true,
+              'createdFolderSettings': {
+                '/subsubfolder1': {
+                  'fileCacheMaxAge': 1000
+                },
+                '/subsubfolder2/subsubsubfolder1': {
+                  'fileCacheMaxAge': 2
+                }
+              }
+            }]
+          }).then(function (res2) {
+            console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(false);
+            console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(false);
+            console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(false);
+            console.log.calledWith('[Studio] Updated folder: subsubfolder2 => {"fileCacheMaxAge":2}').should.equal(false);
+            console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(false);
+            console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => {"fileCacheMaxAge":2}').should.equal(false);
+            return res2.should.have.lengthOf(0);
+          });
+        })
+      });
+
       it('should not create folders again', function () {
         console.log.reset();
         return studio.push({

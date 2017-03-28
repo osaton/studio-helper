@@ -641,7 +641,7 @@ class StudioHelper {
         // If we have settings for this newly created folder, update them now
         let folderSettings = getFolderSettings(folderData.localFolder, localFolders[i], folderData.createdFolderSettings);
 
-        if (folderSettings) {
+        if (folderSettings && res.result.created) {
           return self.updateFolderSettings(res.result.id, folderSettings, { 'log': folderData.logCreated, 'folderName': localFolders[i] }).then(function () {
             // Return the original createFolder res, not update result
             return res;
@@ -1298,7 +1298,8 @@ class StudioHelper {
             'result': {
               'id': res.result,
               'name': folderName,
-              'localFolder': path.join(localFolderPath, folderName)
+              'localFolder': path.join(localFolderPath, folderName),
+              'created': true
             }
           };
 
@@ -1327,7 +1328,8 @@ class StudioHelper {
               'result': {
                 'id': folder.id,
                 'name': folderName,
-                'localFolder': path.join(localFolderPath, folderName)
+                'localFolder': path.join(localFolderPath, folderName),
+                'created': false
               }
             });
           }
@@ -1346,7 +1348,8 @@ class StudioHelper {
               'result': {
                 'id': res.result,
                 'name': folderName,
-                'localFolder': path.join(localFolderPath, folderName)
+                'localFolder': path.join(localFolderPath, folderName),
+                'created': true
               }
             };
 
