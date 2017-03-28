@@ -610,6 +610,9 @@ class StudioHelper {
 
       let folderPath = path.join(localFolder, folderName);
 
+      // Use same separator for every file system
+      folderPath = folderPath.split(path.sep).join('/');
+
       // Use this for correct order of enumerable keys
       let keys = Object.getOwnPropertyNames(allSettings);
 
