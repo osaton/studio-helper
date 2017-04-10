@@ -5,10 +5,10 @@ const should = require('should'),
       path = require('path'),
       Promise = require('bluebird'),
       mainFolder = '57fd20b96c6e79438855b47f',
-      //publicFolder = '58c035c22b089f11379fa5a9',
       testFolder1 = '57fa91c86c6e79d9761b0a4e',
-      testFolder2 = '57fa91cd6c6e790b7d1b0a4e';
-
+      testFolder2 = '57fa91cd6c6e790b7d1b0a4e',
+      studioHost = 'helper.studio.crasman.fi',
+      strictSSL = true;
 
 require('mocha-sinon');
 
@@ -28,7 +28,8 @@ describe('StudioHelper', function() {
 
   it('should initialize', function () {
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     should(studio).be.an.instanceOf(StudioHelper);
@@ -37,7 +38,8 @@ describe('StudioHelper', function() {
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
@@ -59,7 +61,8 @@ describe('StudioHelper', function() {
   describe('#deleteChildFolders', function () {
     it('should delete child folders of a given folderid', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.deleteChildFolders(mainFolder).then(function (res) {
@@ -70,7 +73,8 @@ describe('StudioHelper', function() {
 
   describe('#getFolderSettings', function () {
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     it('should get folder settings', function () {
@@ -96,7 +100,8 @@ describe('StudioHelper', function() {
 
   describe('#updateFolderSettings', function () {
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     it('should change settings', function () {
@@ -129,7 +134,8 @@ describe('StudioHelper', function() {
   describe('#getFolders', function () {
     let addedTestFolder;
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     before(function () {
@@ -145,7 +151,8 @@ describe('StudioHelper', function() {
 
     it('should get folders', function (done) {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       studio.getFolders(mainFolder).then(function (res) {
@@ -167,7 +174,8 @@ describe('StudioHelper', function() {
   describe('#createFolder', function () {
     it('should create folder', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -181,7 +189,8 @@ describe('StudioHelper', function() {
 
     it('should return the already created folder if addIfExists === false', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -203,7 +212,8 @@ describe('StudioHelper', function() {
     it('should create folder and log result if logCreated === true', function () {
       console.log.reset();
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -221,7 +231,8 @@ describe('StudioHelper', function() {
     it('should not log if folder already exists when addIfExists === false and logCreated === true', function () {
       console.log.reset();
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -242,7 +253,8 @@ describe('StudioHelper', function() {
 
     before(function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -257,7 +269,8 @@ describe('StudioHelper', function() {
 
     it('should upload files to specific folder', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
 
@@ -272,7 +285,8 @@ describe('StudioHelper', function() {
 
     it('should upload empty files', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       let files = [path.join(getFolder('files'), '0-file')];
@@ -285,7 +299,8 @@ describe('StudioHelper', function() {
 
     it('should upload files over 25MB', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       let files = [path.join(getFolder('files'), '13m-file')];
@@ -298,7 +313,8 @@ describe('StudioHelper', function() {
 
     after(function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
@@ -312,7 +328,8 @@ describe('StudioHelper', function() {
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('files'), '13m-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     before(function () {
@@ -356,7 +373,8 @@ describe('StudioHelper', function() {
   describe('#createDirectoryFolders', function () {
     let addedTestFolder;
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     beforeEach(function () {
@@ -460,7 +478,8 @@ describe('StudioHelper', function() {
   describe('#deleteFolder', function () {
     it('should delete folder', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.createFolder({
@@ -479,7 +498,8 @@ describe('StudioHelper', function() {
     describe('settings.folder[].includeSubFolders === false', function () {
       before(function () {
         let studio = new StudioHelper({
-          'studio': 'helper.studio.crasman.fi'
+          'studio': studioHost,
+          'strictSSL' : strictSSL
         });
 
         return Promise.resolve([testFolder1, testFolder2]).mapSeries(function(folder) {
@@ -498,7 +518,8 @@ describe('StudioHelper', function() {
 
       it('should push files to multiple folders', function () {
         let studio = new StudioHelper({
-          'studio': 'helper.studio.crasman.fi'
+          'studio': studioHost,
+          'strictSSL' : strictSSL
         });
 
         return studio.push({
@@ -519,7 +540,8 @@ describe('StudioHelper', function() {
     describe('settings.folder[].includeSubFolders === true', function () {
       let addedPushFolder;
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       beforeEach(function () {
@@ -707,7 +729,8 @@ describe('StudioHelper', function() {
   describe('#deleteFiles', function () {
     it('should delete files', function () {
       let studio = new StudioHelper({
-        'studio': 'helper.studio.crasman.fi'
+        'studio': studioHost,
+        'strictSSL' : strictSSL
       });
 
       return studio.getFiles(testFolder1).then(function (files) {
@@ -728,7 +751,8 @@ describe('StudioHelper', function() {
   describe('Prompt test', function () {
     //let addedTestFolder;
     let studio = new StudioHelper({
-      'studio': 'helper.studio.crasman.fi'
+      'studio': studioHost,
+      'strictSSL' : strictSSL
     });
 
     it('only one prompt should be shown', function () {
@@ -736,7 +760,7 @@ describe('StudioHelper', function() {
 
       studio.setAuthToken('');
       return studio.createDirectoryFolders({
-        'folderId': '57fd20b96c6e79438855b47f',
+        'folderId': mainFolder,
         'localFolder': getFolder('folders'),
         'includeSubFolders': true,
         'cache': true
