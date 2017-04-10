@@ -69,6 +69,8 @@ class StudioHelper {
 
     this.ignore = null;
 
+    this.strictSSL = true;
+
     if (settings.proxy) {
       this.setProxy(settings.proxy);
     }
@@ -83,6 +85,10 @@ class StudioHelper {
 
     if (this.credentials && this.credentials.authToken) {
       this.setAuthToken(this.credentials.authToken);
+    }
+
+    if (settings.strictSSL === false) {
+      this.strictSSL = false;
     }
 
     if (settings.promptSchema) {
@@ -216,6 +222,7 @@ class StudioHelper {
     let options = {
           'url': '',
           'proxy': this.proxy,
+          'strictSSL': this.strictSSL,
           'headers': {
             'X-authToken': this.authToken
           }
@@ -256,6 +263,7 @@ class StudioHelper {
     let options = {
           'url': '',
           'proxy': this.proxy,
+          'strictSSL': this.strictSSL,
           'headers': {
             'X-authToken': this.authToken
           },
@@ -289,6 +297,7 @@ class StudioHelper {
     let options = {
           'url': '',
           'proxy': this.proxy,
+          'strictSSL': this.strictSSL,
           'headers': {
             'X-authToken': this.authToken
           }
@@ -325,6 +334,7 @@ class StudioHelper {
     let options = {
           'url': '',
           'proxy': this.proxy,
+          'strictSSL': this.strictSSL,
           'headers': {
             'X-authToken': this.authToken
           }
