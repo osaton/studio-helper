@@ -39,6 +39,7 @@
 | settings | <code>Object</code> |  |  |
 | settings.studio | <code>string</code> |  | Studio host ('xyz.studio.crasman.fi') |
 | [settings.proxy] | <code>string</code> |  | Proxy |
+| [settings.strictSSL] | <code>boolean</code> | <code>true</code> | Change to false if you're using self-signed certificate |
 | [settings.loginPromptEnabled] | <code>boolean</code> | <code>true</code> | Show login prompt if authentication fails |
 | [settings.credentialsFile] | <code>string</code> | <code>&quot;.studio-credentials&quot;</code> | File in which credentials are saved |
 | [settings.ignoreFile] | <code>string</code> | <code>&quot;.studio-ignore&quot;</code> | Utilised by [push](#StudioHelper+push) method. Uses gitignore [spec](https://git-scm.com/docs/gitignore) |
