@@ -24,6 +24,18 @@ describe('StudioHelper', function() {
     });
   });
 
+  // Clean up test folders after tests
+  after(function () {
+    let studio = new StudioHelper({
+      'studio': studioHost,
+      'strictSSL': strictSSL
+    });
+
+    return studio.deleteChildFolders(mainFolder).then(function (res) {
+      return res.result.should.equal(true);
+    });
+  });
+
   it('should initialize', function () {
     let studio = new StudioHelper({
       'studio': studioHost,
