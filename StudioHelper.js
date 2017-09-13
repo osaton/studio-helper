@@ -1167,13 +1167,20 @@ class StudioHelper {
 
       for (let i = 0, l = studioFiles.length; i < l; i++) {
         let studioFile = studioFiles[i],
-            localFileIndex = localFiles.indexOf(studioFile.name);
+            localFileIndex = localFiles.indexOf(studioFile.name),
+            studioFileSha1 = studioFile.details && studioFile.details.sha1 || null;
+
+        console.log(studioFile);
 
         // File found in local and studio folder
         if (localFileIndex !== -1) {
           let fileName = localFiles[localFileIndex],
               fileStats = fs.statSync(path + '/' + fileName),
               changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
+
+          if (studioFileSha1 !== fileStats.sha1) {
+
+          }
 
           if (changedTime > +studioFile.createdAt) {
             let fileInfo = self.getLocalFileInfo(path + '/' + fileName);
