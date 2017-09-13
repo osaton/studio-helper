@@ -701,7 +701,7 @@ describe('StudioHelper', function() {
         });
       });
 
-      it.only('should not upload unchanged files again', function () {
+      it('should not upload unchanged files again', function () {
         return studio.push({
           'folders': [{
             'folderId': addedPushFolder,
