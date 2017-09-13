@@ -1175,22 +1175,26 @@ class StudioHelper {
               fileStats = fs.statSync(path + '/' + fileName),
               changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
 
-          // If local file is newer and has different sha1, add it to upload array
-          if (changedTime > +studioFile.createdAt && studioFileSha1 !== fileStats.sha1) {
+          // If local file is newer
+          if (changedTime > +studioFile.createdAt) {
             let fileInfo = self.getLocalFileInfo(path + '/' + fileName);
 
-            fileUploadArray.push({
-              'action': 'replace',
-              'folderId': studioFolderId,
-              'id': studioFile.id,
-              'type': fileInfo.type,
-              'size': fileInfo.size,
-              'localFolder': path,
-              'name': fileName,
-              'sha1': fileInfo.sha1,
-              'data': fileInfo.data,
-              'createNewVersion': 1
-            });
+            // and if it has different sha1, add it to upload array
+            if (studioFileSha1 !== fileInfo.sha1) {
+              //console.log(changedTime > +studioFile.createdAt, studioFileSha1, fileInfo.sha1);
+              fileUploadArray.push({
+                'action': 'replace',
+                'folderId': studioFolderId,
+                'id': studioFile.id,
+                'type': fileInfo.type,
+                'size': fileInfo.size,
+                'localFolder': path,
+                'name': fileName,
+                'sha1': fileInfo.sha1,
+                'data': fileInfo.data,
+                'createNewVersion': 1
+              });
+            }
           }
 
           // Remove it from localFiles array. We only want new files to remain there
