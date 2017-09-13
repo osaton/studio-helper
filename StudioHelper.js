@@ -1159,8 +1159,7 @@ class StudioHelper {
   }
 
   getChangedFiles(studioFiles, localFiles, path, studioFolderId) {
-    let self = this,
-        fileDetailsNeeded = [];
+    let self = this;
 
     return new Promise(function(resolve) {
       let fileUploadArray = [];
@@ -1170,26 +1169,15 @@ class StudioHelper {
             localFileIndex = localFiles.indexOf(studioFile.name),
             studioFileSha1 = studioFile.details && studioFile.details.sha1 || null;
 
-        console.log(studioFile);
-
         // File found in local and studio folder
         if (localFileIndex !== -1) {
           let fileName = localFiles[localFileIndex],
               fileStats = fs.statSync(path + '/' + fileName),
               changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
 
-          if (studioFileSha1 !== fileStats.sha1) {
-
-          }
-
-          if (changedTime > +studioFile.createdAt) {
+          // If local file is newer and has different sha1, add it to upload array
+          if (changedTime > +studioFile.createdAt && studioFileSha1 !== fileStats.sha1) {
             let fileInfo = self.getLocalFileInfo(path + '/' + fileName);
-
-            fileDetailsNeeded.push({
-              'id': studioFile.id,
-              'sha1': fileInfo.sha1,
-              'name': fileName
-            });
 
             fileUploadArray.push({
               'action': 'replace',
@@ -1203,15 +1191,10 @@ class StudioHelper {
               'data': fileInfo.data,
               'createNewVersion': 1
             });
-
-            // Remove it from localFiles array. We only want new files to remain there
-            localFiles.splice(localFileIndex, 1);
-          } else {
-            // Older local file, remove from localFiles
-            localFiles.splice(localFileIndex, 1);
           }
-        } else {
-          //console.log('file not found');
+
+          // Remove it from localFiles array. We only want new files to remain there
+          localFiles.splice(localFileIndex, 1);
         }
       }
 
@@ -1233,35 +1216,7 @@ class StudioHelper {
         });
       }
 
-      Promise.resolve(fileDetailsNeeded).map(function(file) {
-        return self.getFileDetails(file.id).then(function(fileDetails) {
-          if (fileDetails && fileDetails.details && fileDetails.details.sha1) {
-            // If file has not been changed add it to removable files
-            if (fileDetails.details.sha1 === file.sha1) {
-              return file.id;
-            } else {
-              return null;
-            }
-          }
-        });
-      }).then(function(res) {
-        // Remove unchanged files from upload array
-        for (let i = res.length - 1; i >= 0; i--) {
-          if (res[i]) {
-            for (let j = fileUploadArray.length - 1; j >= 0; j--) {
-              if (fileUploadArray[j].id === res[i]) {
-                fileUploadArray.splice(j, 1);
-              }
-            }
-          }
-        }
-
-        resolve(fileUploadArray);
-      });
-
-      if (!fileDetailsNeeded.length) {
-        resolve(fileUploadArray);
-      }
+      return resolve(fileUploadArray);
     });
   }
 
