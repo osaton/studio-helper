@@ -3,10 +3,10 @@
 const request = require('request'),
       mime = require('mime-types'),
       Promise = require('bluebird'),
+      secretHelper = require('./lib/secret-helper'),
       fs = require('fs'),
       path = require('path'),
       os = require('os'),
-      Cryptr = require('cryptr'),
       ignore = require('ignore'),
       throat = require('throat')(Promise),
       ProgressBar = require('progress');
@@ -57,8 +57,7 @@ class StudioHelper {
       throw Error('StudioHelper#constructor: settings.studio must be set');
     }
 
-    this.credentialsSecret = this._createCredentialsSecret(CREDENTIALS_SECRET_BASE);
-    this.cryptr = new Cryptr(this.credentialsSecret);
+    this._createCredentialsSecret(CREDENTIALS_SECRET_BASE);
     this.apiUrl = 'https://' + settings.studio + API_URL;
     this.authToken = '';
 
@@ -165,19 +164,21 @@ class StudioHelper {
    * @private
    */
   _createCredentialsSecret(secretBase) {
-    // Include mac address in secret
-    let mac = this._getFirstMac();
-    // Add parts of current path for little bit of extra secrecy :P
-    let currentDirParts = __dirname.split('').map((l,i) => (i + 1) % 3 ? l : '').join('');
-    // And cpu model
-    let cpuModel = '';
+    const secretStr = secretBase +
+      secretHelper.getFirstMAC() +
+      secretHelper.getCPUModel() +
+      secretHelper.getCurrentPath();
 
-    let cpus = os.cpus();
-    if (cpus && cpus.length) {
-      cpuModel = cpus[0].model;
-    }
+    this._credentialsSecret = secretStr;
 
-    return secretBase + mac + currentDirParts + cpuModel;
+    return this._credentialsSecret;
+  }
+
+  /**
+   * @private
+   */
+  _getCredentialsSecret() {
+    return this._credentialsSecret;
   }
 
   /**
@@ -185,14 +186,15 @@ class StudioHelper {
    */
   _getCredentials() {
     let data = null;
+    let dataString = null;
 
     try {
-      data = JSON.parse(fs.readFileSync(this.credentialsFile, 'utf8'));
+      dataString = fs.readFileSync(this.credentialsFile, 'utf8');
     } catch (e) {
     }
 
-    if (data) {
-      data = this._getDecryptedData(data);
+    if (dataString) {
+      data = this._getDecryptedData(dataString);
     }
 
     return data;
@@ -553,45 +555,31 @@ class StudioHelper {
   /**
    * @private
    */
-  _getEncryptedData(data) {
-    let encryptedData = null;
-    for (let key in data) {
-      if (data.hasOwnProperty(key)) {
-        if (!encryptedData) {
-          encryptedData = {};
-        }
+  _getEncryptedString(data) {
+    const encryptedString = secretHelper.encryptSync(
+      this._getCredentialsSecret(),
+      JSON.stringify(data)
+    );
 
-        encryptedData[key] = this.cryptr.encrypt(data[key]);
-      }
-    }
-    return encryptedData;
+    return encryptedString;
   }
 
   /**
    * @private
    */
-  _getDecryptedData(data) {
-    let decryptedData = null;
-    let decrypted = false;
+  _getDecryptedData(dataString) {
+    let data = null;
 
     try {
-      for (let key in data) {
-        if (data.hasOwnProperty(key)) {
-          if (!decryptedData) {
-            decryptedData = {};
-          }
+      const decryptedString = secretHelper.decryptSync(
+        this._getCredentialsSecret(),
+        dataString
+      );
 
-          decryptedData[key] = this.cryptr.decrypt(data[key]);
-
-          // Test that authToken is formatted correctly
-          if (key === 'authToken' && /^[\w:\-]+$/.test(decryptedData[key])) {
-            decrypted = true;
-          }
-        }
-      }
+      data = JSON.parse(decryptedString);
     } catch (e) {}
 
-    return decrypted ? decryptedData : null;
+    return data;
   }
 
   /**
@@ -600,9 +588,9 @@ class StudioHelper {
   _updateCredentials(data) {
     let self = this;
 
-    data = this._getEncryptedData(data);
+    const dataString = this._getEncryptedString(data);
 
-    fs.writeFile(this.credentialsFile, JSON.stringify(data), function(err) {
+    fs.writeFile(this.credentialsFile, dataString, function(err) {
       if (err) {
         self._log(err);
       }
