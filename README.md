@@ -43,6 +43,7 @@
 | [settings.loginPromptEnabled] | <code>boolean</code> | <code>true</code> | Show login prompt if authentication fails |
 | [settings.credentialsFile] | <code>string</code> | <code>&quot;.studio-credentials&quot;</code> | File in which credentials are saved |
 | [settings.ignoreFile] | <code>string</code> | <code>&quot;.studio-ignore&quot;</code> | Utilised by [push](#StudioHelper+push) method. Uses gitignore [spec](https://git-scm.com/docs/gitignore) |
+ [settings.customHeaders] | <code>Object</code> | <code>{}</code> | These should folder specific, but it gets a bit complicated – not sure the folder setting information is available in the right places with the file uploads |
 
 **Example**
 ```js
@@ -120,7 +121,13 @@ studio.push({
       'dist/dev': {  // Regex match
         cacheMaxAge: 2
       }
-    }
+    },
+    customHeaders : {
+      'sw.js': {
+        name: 'Service-Worker-Allowed',
+        value: '/'
+      }
+  }
   }]
 }).then(function (res) {
   console.log(res.length + 'files uploaded');
