@@ -125,6 +125,15 @@ class StudioHelper {
     } else {
       this.loginPromptEnabled = true;
     }
+
+    /* Custom headers from settings if exists
+    * (this should actually be folder specific)
+    */
+    if (settings.hasOwnProperty('customHeaders')) {
+      this.customHeaders = settings.customHeaders;
+    } else {
+      this.customHeaders = {};
+    }
   }
 
   /**
@@ -964,6 +973,9 @@ class StudioHelper {
             return self._finishFileUpload(folderId, uploadToken).then(function(res) {
               self._log('Uploaded: ' + localFolder + '/' + fileName);
               resolve(res);
+            }).then(function(res){
+              // Check if this file needs custom headers based on it's name
+              self._checkCustomHeaders(fileId, fileName);
             });
           });
         } else {
@@ -991,6 +1003,9 @@ class StudioHelper {
             return self._finishFileReplace(fileId, uploadToken).then(function(res) {
               self._log('Updated: ' + localFolder + '/' + fileName);
               resolve(res);
+            }).then(function(res){
+              // Check if this file needs custom headers based on it's name
+              self._checkCustomHeaders(fileId, fileName);
             });
           });
         } else {
@@ -1563,6 +1578,54 @@ class StudioHelper {
     }).then(function(res) {
       return Promise.resolve(self._flattenArray(res));
     });
+  }
+
+  /**
+   * @private
+   * @param {string} fileId - id of file
+   * @param {string} headerName - name html header to set
+   * @param {string} headerValue - value of html header
+   */
+  _setHeader(fileId, headerName, headerValue) {
+    let self = this;
+
+    return new Promise(function(resolve) {
+      return self._put('fileheader/' + fileId + '/' + headerName, headerValue).then(function(res) {
+        resolve(res);
+      });
+    });
+  }
+
+  /**
+   * @private
+   * @param {string} fileId - id of file
+   * @param {string} fileName - name of file
+   */
+  _checkCustomHeaders(fileId, fileName) {
+
+    let self = this;
+
+    console.log('check if we should add custom headers after upload.');
+
+    // Add custom headers if filename matches pattern
+    if (self.customHeaders.hasOwnProperty(fileName)) {
+
+      console.log('Setting custom header...');
+
+      self._setHeader(fileId, self.customHeaders[fileName].name, self.customHeaders[fileName].value).then(function(result){
+
+        console.log('Studio API fileheader complete');
+        console.log(result);
+
+      }).catch(function(err){
+
+        console.log('Problem with setting header');
+        console.log(err);
+      });
+    } else {
+
+      console.log('No custom header needed.');
+    }
   }
 
 }
