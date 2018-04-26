@@ -380,7 +380,7 @@ describe('StudioHelper', function() {
     });
   });
 
-  describe.only('#getFileHeaders', function () {
+  describe('#getFileHeaders', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
@@ -426,7 +426,7 @@ describe('StudioHelper', function() {
     });
   });
 
-  describe.only('#setFileHeaders', function () {
+  describe('#setFileHeaders', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
@@ -870,6 +870,65 @@ describe('StudioHelper', function() {
         });
       });
     });
+
+    describe.only('settings.folder[].createdFileHeaders', function () {
+      let addedPushFolder;
+      let studio = new StudioHelper({
+        'studio': studioHost,
+        'strictSSL': strictSSL
+      });
+
+      beforeEach(function () {
+        // create push folder
+        return studio.createFolder({
+          'parentId': mainFolder,
+          'name': 'push-includeChildFolders'
+        }).then(function (res) {
+          addedPushFolder = res.result.id;
+          return res.status.should.equal('ok');
+        });
+      });
+
+      it('should se correct headers for new uploaded files', function () {
+        console.log.reset();
+        return studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1/subfolder1'),
+            'includeSubFolders': true,
+            'createdFolderSettings': {
+              '/subsubfolder1': {
+                'fileCacheMaxAge': 1000
+              },
+              '/subsubfolder2/subsubsubfolder1': {
+                'fileCacheMaxAge': 2
+              }
+            },
+            'createdFileHeaders': {
+              '/subfolder1/subsubfolder1/file1.js': {
+                'Test-Header': 'Test',
+                'Test-Header-2': 'Test2'
+              }
+            }
+          }]
+        }).then(function (res) {
+          console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubfolder2 => {"fileCacheMaxAge":2}').should.equal(false);
+          console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
+          console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => {"fileCacheMaxAge":2}').should.equal(true);
+          return res.should.have.lengthOf(3);
+        })
+      });
+
+      after(function () {
+        // clean up folder
+        return studio.deleteFolder(addedPushFolder).then(function (res) {
+          return res.status.should.equal('ok');
+        });
+      });
+    })
   })
 
   describe('#deleteFiles', function () {

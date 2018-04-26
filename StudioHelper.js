@@ -201,6 +201,42 @@ class StudioHelper {
   }
 
   /**
+   * Match correct header settings
+   *
+   * @private
+   * @param {Object} options
+   * @param {string} options.localFolder
+   * @param {string} options.fileName
+   * @param {Object} options.allHeaders - Object with file paths regex as keys
+   */
+  _getPossibleFileHeaders(options) {
+    if (!options.allHeaders) {
+      return null;
+    }
+
+    let filePath = path.join(options.localFolder, options.fileName);
+
+    // Use same separator for every file system
+    filePath = filePath.split(path.sep).join('/');
+
+
+    // Use this for correct order of enumerable keys
+    let filePatterns = Object.getOwnPropertyNames(options.allHeaders);
+
+    // Check if this files path matches any of the regex patterns in options.allHeaders
+    for (let i=0, l=filePatterns.length; i<l; i++) {
+      let pattern = filePatterns[i];
+      let regEx = new RegExp(pattern);
+
+      if (regEx.test(filePath)) {
+        return options.allHeaders[pattern];
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * @private
    */
   _addToIgnore(filePath) {
@@ -635,6 +671,7 @@ class StudioHelper {
       folderJobs.push(this.createFolder({
         'parentId': folderData.folderId,
         'name': localFolders[i],
+        'baseLocalFolder': folderData.baseLocalFolder || folderData.localFolder,
         'localFolder': folderData.localFolder,
         'logCreated': folderData.logCreated,
         'folderSettings': getFolderSettings(folderData.localFolder, localFolders[i], folderData.createdFolderSettings),
@@ -662,6 +699,7 @@ class StudioHelper {
           let folder = parentRes[i].result;
           folderJobs.push(self._createDirFolders({
             'folderId': folder.id,
+            'baseLocalFolder': folder.baseLocalFolder,
             'localFolder': path.join(folderData.localFolder, folder.name),
             'logCreated': folderData.logCreated,
             'createdFolderSettings': folderData.createdFolderSettings,
@@ -689,6 +727,7 @@ class StudioHelper {
 
   /**
    * Create folders found in local directory if not already created
+   *
    * @async Returns Promise
    * @param {Object} folderData
    * @param {string} folderData.folderId - Studio folder id
@@ -815,7 +854,7 @@ class StudioHelper {
    *       }
    *     },
    *     createdFileHeaders: {
-   *       'service-worker.js': { // Regex match
+   *       'dist/master/service-worker.js': { // Regex match
    *         'Service-Worker-Allowed': '/'
    *       }
    *     }
@@ -830,21 +869,22 @@ class StudioHelper {
    * @param {string} settings.folders[].localFolder - Local folder path
    * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
    * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
-   * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file names (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
+   * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file paths (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
    * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
     let self = this;
     let createFolderJobs = [];
+    const folderLocalPaths = [];
 
     for (let i=settings.folders.length-1; i>=0; i--) {
       let folderData = settings.folders[i];
 
+      folderLocalPaths.push(folderData.localFolder);
+
       if (folderData.includeSubFolders) {
         folderData.logCreated = true;
-        folderData.includeSubFolders = true;
         createFolderJobs.push(this.createDirectoryFolders(folderData));
-        //settings.folders.splice(i, 1);
       }
     }
 
@@ -853,10 +893,23 @@ class StudioHelper {
       let pushFolders = [];
 
       createdFolders.forEach(function (folderRes) {
-        pushFolders.push({
+        const pushFolderData = {
           'folderId': folderRes.result.id,
           'localFolder': folderRes.result.localFolder
-        });
+        };
+
+        // If folder had createdFileHeaders options, attach them to the upload options
+        const folderSettingsIndex = folderLocalPaths.indexOf(folderRes.result.baseLocalFolder);
+
+        if (folderSettingsIndex !== -1) {
+          const folderSettings = settings.folders[folderSettingsIndex];
+
+          if (folderSettings.createdFileHeaders) {
+            pushFolderData.createdFileHeaders = folderSettings.createdFileHeaders;
+          }
+        }
+
+        pushFolders.push(pushFolderData);
       });
 
       // Concat the normally inserted folders to this array
@@ -1051,7 +1104,7 @@ class StudioHelper {
       'log': false,
       'fileName': ''
     }
-    const jobs = [];
+    //const jobs = [];
 
     if (options) {
       for (let key in options) {
@@ -1061,19 +1114,7 @@ class StudioHelper {
       }
     }
 
-    // Loop through each header settings an update
     const keys = Object.keys(headerSettings);
-    /*Object.keys(headerSettings).forEach(headerKey => {
-      const headerValue = headerSettings[headerKey];
-
-      jobs.push(this._put('fileheader/' + fileId + '/' + headerKey, headerValue).then(res => {
-        return {
-          'status': res.status,
-          'key': headerKey,
-          'value': headerValue
-        };
-      }));
-    });*/
 
     // Has to be series or header data might be lost
     const res = Promise.resolve(keys).mapSeries(headerKey => {
@@ -1088,7 +1129,6 @@ class StudioHelper {
       });
     });
 
-    // Promise.all(jobs) // parallel
     return res.then(results => {
       const headersRes = {
         'status': 'ok',
@@ -1117,35 +1157,6 @@ class StudioHelper {
 
       return headersRes;
     });
-    /*
-    return Promise.all(jobs).then(results => {
-      const headersRes = {
-        'status': 'ok',
-        'code': 0,
-        'result': {
-          'fileId': fileId,
-          'headers': null
-        }
-      };
-
-      results.forEach(res => {
-        if (res.status === 'ok') {
-          if (!headersRes.result.headers) {
-            headersRes.result.headers = {}
-          }
-
-          headersRes.result.headers[res.key] = res.value
-        } else {
-          return Promise.reject(res);
-        }
-      });
-
-      if (opt.log) {
-        self._log('Updated file header: ' + opt.fileName + ' => ' + JSON.stringify(headersRes.result.headers));
-      }
-
-      return headersRes;
-    });*/
   }
 
   /**
@@ -1244,19 +1255,6 @@ class StudioHelper {
     return this.batchUpload(replaceFiles);
   }
 
-  _uploadChanged(folderId, files, path) {
-    let self = this;
-
-    return new Promise(function(resolve) {
-      return self.getFiles(folderId).then(function(studioFiles) {
-        return self.getChangedFiles(studioFiles, files, path, folderId).then(function(changedFiles) {
-          return self.batchUpload(changedFiles).then(function(res) {
-            resolve(res);
-          });
-        });
-      });
-    });
-  }
   /**
    * Login
    *
@@ -1294,7 +1292,7 @@ class StudioHelper {
     });
   }
 
-  getChangedFiles(studioFiles, localFiles, path, studioFolderId) {
+  getChangedFiles(studioFiles, localFiles, path, studioFolderId, options = {}) {
     let self = this;
 
     return new Promise(function(resolve) {
@@ -1317,7 +1315,6 @@ class StudioHelper {
 
             // and if it has different sha1, add it to upload array
             if (studioFileSha1 !== fileInfo.sha1) {
-              //console.log(changedTime > +studioFile.createdAt, studioFileSha1, fileInfo.sha1);
               fileUploadArray.push({
                 'action': 'replace',
                 'folderId': studioFolderId,
@@ -1343,6 +1340,12 @@ class StudioHelper {
         let fileName = localFiles[i],
             fileInfo = self.getLocalFileInfo(path + '/' + fileName);
 
+        const fileHeaders = self._getPossibleFileHeaders({
+          'fileName': fileName,
+          'localFolder': path,
+          'allHeaders': options.createdFileHeaders
+        });
+
         // Add file to be replaced
         fileUploadArray.push({
           'action': 'upload',
@@ -1352,7 +1355,8 @@ class StudioHelper {
           'type': fileInfo.type,
           'size': fileInfo.size,
           'sha1': fileInfo.sha1,
-          'data': fileInfo.data
+          'data': fileInfo.data,
+          'headers': fileHeaders
         });
       }
 
@@ -1398,6 +1402,7 @@ class StudioHelper {
     let parentId = settings.parentId || '';
     let folderName = settings.name;
     let localFolderPath = settings.localFolder || '';
+    let baseLocalFolder = settings.baseLocalFolder || null;
     let addIfExists = settings.addIfExists === false ? false : true;
     let logging = settings.logCreated === true ? true : false;
     let apipath = 'folders/' + parentId;
@@ -1444,6 +1449,7 @@ class StudioHelper {
               'result': {
                 'id': folder.id,
                 'name': folderName,
+                'baseLocalFolder': baseLocalFolder,
                 'localFolder': path.join(localFolderPath, folderName),
                 'created': false
               }
@@ -1464,6 +1470,7 @@ class StudioHelper {
               'result': {
                 'id': res.result,
                 'name': folderName,
+                'baseLocalFolder': baseLocalFolder,
                 'localFolder': path.join(localFolderPath, folderName),
                 'created': true
               }
@@ -1643,12 +1650,12 @@ class StudioHelper {
   /**
    * @private
    */
-  _uploadChanged(folderId, files, path) {
+  _uploadChanged(folderId, files, path, uploadOptions) {
     let self = this;
 
     return new Promise(function(resolve) {
       return self.getFiles(folderId).then(function(studioFiles) {
-        return self.getChangedFiles(studioFiles, files, path, folderId).then(function(changedFiles) {
+        return self.getChangedFiles(studioFiles, files, path, folderId, uploadOptions).then(function(changedFiles) {
           return self.batchUpload(changedFiles).then(function(res) {
             resolve(res);
           });
@@ -1680,6 +1687,7 @@ class StudioHelper {
           'folderId': folder.folderId,
           'localFolder': folder.localFolder,
           'includeSubFolders': folder.includeSubFolders,
+          'createdFileHeaders': folder.createdFileHeaders,
           'files': []
         };
 
@@ -1707,7 +1715,9 @@ class StudioHelper {
     }
 
     return Promise.resolve(foldersData).mapSeries(function(folderData) {
-      return self._uploadChanged(folderData.folderId, folderData.files, folderData.localFolder);
+      return self._uploadChanged(folderData.folderId, folderData.files, folderData.localFolder, {
+        'createdFileHeaders': folderData.createdFileHeaders
+      });
     }).then(function(res) {
       return Promise.resolve(self._flattenArray(res));
     });
