@@ -380,6 +380,109 @@ describe('StudioHelper', function() {
     });
   });
 
+  describe.only('#getFileHeaders', function () {
+    let uploadFilesFolderId;
+    let addedTestFiles;
+    let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
+    let studio = new StudioHelper({
+      'studio': studioHost,
+      'strictSSL': strictSSL
+    });
+
+    before(function () {
+      return studio.createFolder({
+        'parentId': mainFolder,
+        'name': 'uploadFilesTest'
+      }).then(function (res) {
+        uploadFilesFolderId = res.result.id;
+        return studio.uploadFiles(localTestFiles, uploadFilesFolderId).then(function (res) {
+          res.should.have.lengthOf(1);
+          addedTestFiles = res;
+          Promise.resolve(res);
+        });
+      });
+    });
+
+
+    it('should get file headers', function () {
+      //console.log(addedTestFiles);
+      let files = [{
+        'fileId': addedTestFiles[0].result.createdFileId,
+        'localFile': localTestFiles[0]
+      }];
+
+      //console.log(files);
+      return studio.getFileHeaders(files[0].fileId).then(function(res) {
+        res.status.should.equal('ok');
+        // Expect file headers to be null for empty file
+        should(res.result.headers).not.be.ok();
+      });
+    });
+
+    after(function () {
+      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
+        return Promise.resolve(res);
+      });
+    });
+  });
+
+  describe.only('#setFileHeaders', function () {
+    let uploadFilesFolderId;
+    let addedTestFiles;
+    let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
+    let studio = new StudioHelper({
+      'studio': studioHost,
+      'strictSSL': strictSSL
+    });
+
+    before(function () {
+      return studio.createFolder({
+        'parentId': mainFolder,
+        'name': 'uploadFilesTest'
+      }).then(function (res) {
+        uploadFilesFolderId = res.result.id;
+        return studio.uploadFiles(localTestFiles, uploadFilesFolderId).then(function (res) {
+          res.should.have.lengthOf(1);
+          addedTestFiles = res;
+          Promise.resolve(res);
+        });
+      });
+    });
+
+
+    it('should update file headers', function () {
+      //console.log(addedTestFiles);
+      let files = [{
+        'fileId': addedTestFiles[0].result.createdFileId,
+        'localFile': localTestFiles[0]
+      }];
+
+      const headers = {
+        //'Service-Worker-Allowed': '/',
+        'Custom-Header': 'test',
+        'Another-Header': 'test2'
+      };
+
+      //console.log(files);
+      return studio.setFileHeaders(files[0].fileId, headers, { 'log': true }).then(function(resSet) {
+        resSet.status.should.equal('ok');
+        const setHeaders = resSet.result.headers;
+        Object.keys(setHeaders).should.eql(Object.keys(headers));
+
+        return studio.getFileHeaders(files[0].fileId).then(resGet => {
+          resGet.status.should.equal('ok');
+          resGet.result.headers.should.eql(headers);
+        });
+      });
+    });
+
+    after(function () {
+      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
+        return Promise.resolve(res);
+      });
+    });
+  });
+
   describe('#createDirectoryFolders', function () {
     let addedTestFolder;
     let studio = new StudioHelper({

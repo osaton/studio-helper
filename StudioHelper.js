@@ -813,6 +813,11 @@ class StudioHelper {
    *       'dist/dev': {  // Regex match
    *         cacheMaxAge: 2
    *       }
+   *     },
+   *     createdFileHeaders: {
+   *       'service-worker.js': { // Regex match
+   *         'Service-Worker-Allowed': '/'
+   *       }
    *     }
    *   }]
    * }).then(function (res) {
@@ -824,7 +829,8 @@ class StudioHelper {
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
    * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
-   * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (glob pattern) as keys and FolderUpdateSettings object as value. See example.
+   * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
+   * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file names (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
    * @return {Array<Object>} Array of objects with file upload information
    */
   push(settings) {
@@ -998,6 +1004,148 @@ class StudioHelper {
         }
       });
     });
+  }
+
+  /**
+   * Get file headers
+   *
+   * @param {string} fileId
+   * @returns
+   */
+  getFileHeaders(fileId) {
+    return this._get('fileheaders', fileId).then(function(res) {
+      if (res.status === 'error') {
+        return Promise.reject(res);
+      }
+
+      return {
+        'status': 'ok',
+        'code': 0,
+        'result': {
+          'fileId': fileId,
+          'headers': Array.isArray(res.result) ? null : res.result // Convert empty array to null, otherwise use headers object
+        }
+      };
+    });
+  }
+
+  /**
+   * @typedef {Object} FileHeaderSettings - Key / value pairs of wanted header names and their values
+   */
+
+  /**
+   * Update file headers
+   *
+   * @async Returns Promise
+   * @private for now
+   * @param {string} fileId
+   * @param {FileHeaderSettings} headerSettings key / value pairs
+   * @param {Object} [options]
+   * @param {boolean} [options.log=false] log results
+   * @param {string} [options.fileName=''] used for logging
+   * @returns {ResultObj}
+   */
+  setFileHeaders(fileId, headerSettings, options) {
+    const self = this;
+    const opt = {
+      'log': false,
+      'fileName': ''
+    }
+    const jobs = [];
+
+    if (options) {
+      for (let key in options) {
+        if (options.hasOwnProperty(key)) {
+          opt[key] = options[key]
+        }
+      }
+    }
+
+    // Loop through each header settings an update
+    const keys = Object.keys(headerSettings);
+    /*Object.keys(headerSettings).forEach(headerKey => {
+      const headerValue = headerSettings[headerKey];
+
+      jobs.push(this._put('fileheader/' + fileId + '/' + headerKey, headerValue).then(res => {
+        return {
+          'status': res.status,
+          'key': headerKey,
+          'value': headerValue
+        };
+      }));
+    });*/
+
+    // Has to be series or header data might be lost
+    const res = Promise.resolve(keys).mapSeries(headerKey => {
+      const headerValue = headerSettings[headerKey];
+
+      return this._put('fileheader/' + fileId + '/' + headerKey, headerValue).then(res => {
+        return {
+          'status': res.status,
+          'key': headerKey,
+          'value': headerValue
+        };
+      });
+    });
+
+    // Promise.all(jobs) // parallel
+    return res.then(results => {
+      const headersRes = {
+        'status': 'ok',
+        'code': 0,
+        'result': {
+          'fileId': fileId,
+          'headers': null
+        }
+      };
+
+      results.forEach(res => {
+        if (res.status === 'ok') {
+          if (!headersRes.result.headers) {
+            headersRes.result.headers = {}
+          }
+
+          headersRes.result.headers[res.key] = res.value
+        } else {
+          return Promise.reject(res);
+        }
+      });
+
+      if (opt.log) {
+        self._log('Updated file header: ' + opt.fileName + ' => ' + JSON.stringify(headersRes.result.headers));
+      }
+
+      return headersRes;
+    });
+    /*
+    return Promise.all(jobs).then(results => {
+      const headersRes = {
+        'status': 'ok',
+        'code': 0,
+        'result': {
+          'fileId': fileId,
+          'headers': null
+        }
+      };
+
+      results.forEach(res => {
+        if (res.status === 'ok') {
+          if (!headersRes.result.headers) {
+            headersRes.result.headers = {}
+          }
+
+          headersRes.result.headers[res.key] = res.value
+        } else {
+          return Promise.reject(res);
+        }
+      });
+
+      if (opt.log) {
+        self._log('Updated file header: ' + opt.fileName + ' => ' + JSON.stringify(headersRes.result.headers));
+      }
+
+      return headersRes;
+    });*/
   }
 
   /**
