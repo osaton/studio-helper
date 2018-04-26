@@ -434,6 +434,11 @@ describe('StudioHelper', function() {
       'studio': studioHost,
       'strictSSL': strictSSL
     });
+    const customHeaders = {
+      //'Service-Worker-Allowed': '/',
+      'Custom-Header': 'test',
+      'Another-Header': 'test2'
+    };
 
     before(function () {
       return studio.createFolder({
@@ -449,7 +454,6 @@ describe('StudioHelper', function() {
       });
     });
 
-
     it('should update file headers', function () {
       //console.log(addedTestFiles);
       let files = [{
@@ -457,21 +461,33 @@ describe('StudioHelper', function() {
         'localFile': localTestFiles[0]
       }];
 
-      const headers = {
-        //'Service-Worker-Allowed': '/',
-        'Custom-Header': 'test',
-        'Another-Header': 'test2'
-      };
-
       //console.log(files);
-      return studio.setFileHeaders(files[0].fileId, headers, { 'log': true }).then(function(resSet) {
+      return studio.setFileHeaders(files[0].fileId, customHeaders).then(function(resSet) {
         resSet.status.should.equal('ok');
         const setHeaders = resSet.result.headers;
-        Object.keys(setHeaders).should.eql(Object.keys(headers));
+        Object.keys(setHeaders).should.eql(Object.keys(customHeaders));
 
         return studio.getFileHeaders(files[0].fileId).then(resGet => {
           resGet.status.should.equal('ok');
-          resGet.result.headers.should.eql(headers);
+          resGet.result.headers.should.eql(customHeaders);
+        });
+      });
+    });
+
+    it('should keep headers when replacing file', function () {
+      //console.log(addedTestFiles);
+      let files = [{
+        'fileId': addedTestFiles[0].result.createdFileId,
+        'localFile': localTestFiles[0]
+      }];
+
+      //console.log(files);
+      return studio.replaceFiles(files).then(function(res) {
+        res[0].status.should.equal('ok');
+
+        return studio.getFileHeaders(files[0].fileId).then(resGet => {
+          resGet.status.should.equal('ok');
+          resGet.result.headers.should.eql(customHeaders);
         });
       });
     });
