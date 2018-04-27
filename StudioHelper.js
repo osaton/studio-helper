@@ -1007,7 +1007,7 @@ class StudioHelper {
   /**
    * @private
    */
-  uploadFile(folderId, fileName, fileType, fileSize, sha1, fileData, localFolder) {
+  uploadFile(folderId, fileName, fileType, fileSize, sha1, fileData, localFolder, options = {}) {
     let self = this;
 
     return new Promise(function(resolve, reject) {
@@ -1021,7 +1021,15 @@ class StudioHelper {
           let uploadToken = res.result.uploadToken;
           return self._uploadFileChunks(folderId, uploadToken, fileData, fileName).then(function() {
             return self._finishFileUpload(folderId, uploadToken).then(function(res) {
-              self._log('Uploaded: ' + localFolder + '/' + fileName);
+              const filePath = path.join(localFolder, fileName);
+              self._log('Uploaded: ' + filePath);
+
+              // Update file headers, if we have something defined
+              if (options.headers) {
+                return self.setFileHeaders(res.result.createdFileId, options.headers, { 'log': true, 'filePath': filePath }).then(() => {
+                  return resolve(res);
+                });
+              }
               resolve(res);
             });
           });
@@ -1034,7 +1042,7 @@ class StudioHelper {
     });
   }
 
-  replaceFile(fileId, fileType, fileSize, sha1, fileData, fileName, localFolder) {
+  replaceFile(fileId, fileType, fileSize, sha1, fileData, fileName, localFolder, options = {}) {
     let self = this;
     return new Promise(function(resolve, reject) {
       // Start upload
@@ -1048,7 +1056,17 @@ class StudioHelper {
           let uploadToken = res.result.uploadToken;
           return self._replaceFileChunks(fileId, uploadToken, fileData, fileName).then(function() {
             return self._finishFileReplace(fileId, uploadToken).then(function(res) {
-              self._log('Updated: ' + localFolder + '/' + fileName);
+              const filePath = path.join(localFolder, fileName);
+
+              self._log('Updated: ' + filePath);
+
+              // Update file headers, if we have something defined
+              if (options.headers) {
+                return self.setFileHeaders(res.result.createdFileId, options.headers, { 'log': true, 'filePath': filePath }).then(() => {
+                  return resolve(res);
+                });
+              }
+
               resolve(res);
             });
           });
@@ -1102,7 +1120,7 @@ class StudioHelper {
     const self = this;
     const opt = {
       'log': false,
-      'fileName': ''
+      'filePath': ''
     }
     //const jobs = [];
 
@@ -1152,7 +1170,7 @@ class StudioHelper {
       });
 
       if (opt.log) {
-        self._log('Updated file header: ' + opt.fileName + ' => ' + JSON.stringify(headersRes.result.headers));
+        self._log('Updated file headers: ' + opt.filePath + ' => ' + JSON.stringify(headersRes.result.headers));
       }
 
       return headersRes;
@@ -1636,11 +1654,15 @@ class StudioHelper {
     let self = this;
 
     let processAll = Promise.resolve(files).mapSeries(function(file) {
+      const options = {
+        'headers': file.headers
+      };
+
       switch (file.action) {
         case 'upload':
-          return self.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder);
+          return self.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder, options);
         case 'replace':
-          return self.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder);
+          return self.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder, options);
       }
     });
 

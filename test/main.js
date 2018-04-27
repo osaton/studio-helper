@@ -889,7 +889,7 @@ describe('StudioHelper', function() {
         });
       });
 
-      it('should se correct headers for new uploaded files', function () {
+      it('should set correct headers for new uploaded files', function () {
         console.log.reset();
         return studio.push({
           'folders': [{
@@ -912,6 +912,8 @@ describe('StudioHelper', function() {
             }
           }]
         }).then(function (res) {
+          // Fail test
+          res.should.eql(false);
           console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
           console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
