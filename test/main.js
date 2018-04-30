@@ -871,7 +871,7 @@ describe('StudioHelper', function() {
       });
     });
 
-    describe.only('settings.folder[].createdFileHeaders', function () {
+    describe('settings.folder[].createdFileHeaders', function () {
       let addedPushFolder;
       let studio = new StudioHelper({
         'studio': studioHost,
@@ -912,14 +912,14 @@ describe('StudioHelper', function() {
             }
           }]
         }).then(function (res) {
-          // Fail test
-          res.should.eql(false);
           console.log.calledWith('[Studio] Created folder: subsubfolder1').should.equal(true);
           console.log.calledWith('[Studio] Updated folder: subsubfolder1 => {"fileCacheMaxAge":1000}').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubfolder2').should.equal(true);
           console.log.calledWith('[Studio] Updated folder: subsubfolder2 => {"fileCacheMaxAge":2}').should.equal(false);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
           console.log.calledWith('[Studio] Updated folder: subsubsubfolder1 => {"fileCacheMaxAge":2}').should.equal(true);
+          // Headers should be updated as well for this one file
+          console.log.calledWithMatch(/\[Studio\] Updated file headers: (.)*\/subsubfolder1\/file1\.js => {"Test-Header":"Test","Test-Header-2":"Test2"}/).should.equal(true);
           return res.should.have.lengthOf(3);
         })
       });
