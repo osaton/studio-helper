@@ -202,7 +202,7 @@ class StudioHelper {
 
   /**
    * Match correct header settings
-   *
+   * @private
    * @param {Object} options
    * @param {string} options.localFolder
    * @param {string} options.fileName
@@ -723,6 +723,128 @@ class StudioHelper {
     });
   }
 
+  /**
+   * Login
+   *
+   * @param  {string} username
+   * @param  {string} password
+   * @param  {string} token
+   * @param  {int} [longSession=1]
+   * @return {Promise}
+   */
+  login(username, password, token, longSession) {
+    let self = this;
+
+    longSession = longSession === 0 ? longSession : 1;
+
+    if (!username || !password) {
+      throw Error('StudioHelper#login: missing username and / or password');
+    }
+
+    return new Promise(function(resolve) {
+      return self._post('login', {
+        'username': username,
+        'password': password,
+        'token': token,
+        'longSession': longSession
+      }, { 'timeout': 10000 }, true).then(function(res) {
+        resolve(res);
+      }, function(err) {
+        resolve(err);
+      });
+
+      //resolve(username);
+    });
+  }
+
+  /**
+   * Push changes to Studio
+   *
+   * @example
+   * studio.push({
+   *   folders: [{
+   *     folderId: '568a7a2aadd4532b0f4f4f5b',
+   *     localFolder: 'dist/js'
+   *   }, {
+   *     folderId: '568a7a27add453aa1a4f4f58',
+   *     localFolder: 'dist/css'
+   *   }, {
+   *     folderId: '568a7a27add453aa1a4f4f58',
+   *     localFolder: 'dist/',
+   *     includeSubFolders: true,
+   *     createdFolderSettings: {
+   *       'dist/master': { // Regex match
+   *         cacheMaxAge: 64800
+   *       },
+   *       'dist/dev': {  // Regex match
+   *         cacheMaxAge: 2
+   *       }
+   *     },
+   *     createdFileHeaders: {
+   *       'dist/master/service-worker.js': { // Regex match
+   *         'Service-Worker-Allowed': '/'
+   *       }
+   *     }
+   *   }]
+   * }).then(function (res) {
+   *   console.log(res.length + 'files uploaded');
+   * })
+   * @async
+   * @param {Object} settings
+   * @param {Array<Object>} settings.folders
+   * @param {string} settings.folders[].folderId - Studio folder id
+   * @param {string} settings.folders[].localFolder - Local folder path
+   * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
+   * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
+   * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file paths (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
+   * @return {Array<Object>} Array of objects with file upload information
+   */
+  push(settings) {
+    let self = this;
+    let createFolderJobs = [];
+    const folderLocalPaths = [];
+
+    for (let i=settings.folders.length-1; i>=0; i--) {
+      let folderData = settings.folders[i];
+
+      folderLocalPaths.push(folderData.localFolder);
+
+      if (folderData.includeSubFolders) {
+        folderData.logCreated = true;
+        createFolderJobs.push(this.createDirectoryFolders(folderData));
+      }
+    }
+
+    return Promise.all(createFolderJobs).then(function (res) {
+      let createdFolders = self._flattenArray(res);
+      let pushFolders = [];
+
+      createdFolders.forEach(function (folderRes) {
+        const pushFolderData = {
+          'folderId': folderRes.result.id,
+          'localFolder': folderRes.result.localFolder
+        };
+
+        // If folder had createdFileHeaders options, attach them to the upload options
+        const folderSettingsIndex = folderLocalPaths.indexOf(folderRes.result.baseLocalFolder);
+
+        if (folderSettingsIndex !== -1) {
+          const folderSettings = settings.folders[folderSettingsIndex];
+
+          if (folderSettings.createdFileHeaders) {
+            pushFolderData.createdFileHeaders = folderSettings.createdFileHeaders;
+          }
+        }
+
+        pushFolders.push(pushFolderData);
+      });
+
+      // Concat the normally inserted folders to this array
+      pushFolders = pushFolders.concat(settings.folders);
+
+      return self.uploadFilesInFolders(pushFolders);
+    });
+  }
 
   /**
    * Create folders found in local directory if not already created
@@ -830,95 +952,6 @@ class StudioHelper {
   }
 
   /**
-   * Push changes to Studio
-   *
-   * @example
-   * studio.push({
-   *   folders: [{
-   *     folderId: '568a7a2aadd4532b0f4f4f5b',
-   *     localFolder: 'dist/js'
-   *   }, {
-   *     folderId: '568a7a27add453aa1a4f4f58',
-   *     localFolder: 'dist/css'
-   *   }, {
-   *     folderId: '568a7a27add453aa1a4f4f58',
-   *     localFolder: 'dist/',
-   *     includeSubFolders: true,
-   *     createdFolderSettings: {
-   *       'dist/master': { // Regex match
-   *         cacheMaxAge: 64800
-   *       },
-   *       'dist/dev': {  // Regex match
-   *         cacheMaxAge: 2
-   *       }
-   *     },
-   *     createdFileHeaders: {
-   *       'dist/master/service-worker.js': { // Regex match
-   *         'Service-Worker-Allowed': '/'
-   *       }
-   *     }
-   *   }]
-   * }).then(function (res) {
-   *   console.log(res.length + 'files uploaded');
-   * })
-   * @async
-   * @param {Object} settings
-   * @param {Array<Object>} settings.folders
-   * @param {string} settings.folders[].folderId - Studio folder id
-   * @param {string} settings.folders[].localFolder - Local folder path
-   * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
-   * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
-   * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file paths (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
-   * @return {Array<Object>} Array of objects with file upload information
-   */
-  push(settings) {
-    let self = this;
-    let createFolderJobs = [];
-    const folderLocalPaths = [];
-
-    for (let i=settings.folders.length-1; i>=0; i--) {
-      let folderData = settings.folders[i];
-
-      folderLocalPaths.push(folderData.localFolder);
-
-      if (folderData.includeSubFolders) {
-        folderData.logCreated = true;
-        createFolderJobs.push(this.createDirectoryFolders(folderData));
-      }
-    }
-
-    return Promise.all(createFolderJobs).then(function (res) {
-      let createdFolders = self._flattenArray(res);
-      let pushFolders = [];
-
-      createdFolders.forEach(function (folderRes) {
-        const pushFolderData = {
-          'folderId': folderRes.result.id,
-          'localFolder': folderRes.result.localFolder
-        };
-
-        // If folder had createdFileHeaders options, attach them to the upload options
-        const folderSettingsIndex = folderLocalPaths.indexOf(folderRes.result.baseLocalFolder);
-
-        if (folderSettingsIndex !== -1) {
-          const folderSettings = settings.folders[folderSettingsIndex];
-
-          if (folderSettings.createdFileHeaders) {
-            pushFolderData.createdFileHeaders = folderSettings.createdFileHeaders;
-          }
-        }
-
-        pushFolders.push(pushFolderData);
-      });
-
-      // Concat the normally inserted folders to this array
-      pushFolders = pushFolders.concat(settings.folders);
-
-      return self.uploadFilesInFolders(pushFolders);
-    });
-  }
-
-  /**
    * Get files of a folder
    *
    * @param {string} folderId - Studio folder id
@@ -974,6 +1007,36 @@ class StudioHelper {
         'code': 0
       });
     });
+  }
+
+  /**
+   * Upload files to a specified folder
+   *
+   * @param  {Array<string>} files - file with path
+   * @param  {string} folderId - Studio folder id
+   * @return {Promise<Array<Object>>}
+   */
+  uploadFiles(files, folderId) {
+    if (!folderId) {
+      throw Error('StudioHelper#uploadFiles: folderId not set');
+    }
+
+    let uploadFiles = this.getUploadInformation(files, folderId);
+
+    return this.batchUpload(uploadFiles);
+  }
+
+  /**
+   * Replace files
+   *
+   * @param {Array<Object>} files
+   * @param {string} files[].fileId - Studio file id
+   * @param {string} files[].localFile - Local file path
+   * @return {Promise<Array<Object>>}
+   */
+  replaceFiles(files) {
+    let replaceFiles = this.getReplaceInformation(files);
+    return this.batchUpload(replaceFiles);
   }
 
   getLocalFileInfo(filePath) {
@@ -1237,70 +1300,6 @@ class StudioHelper {
     return replaceReadyFiles;
   }
 
-  /**
-   * Upload files to a specified folder
-   *
-   * @param  {Array<string>} files - file with path
-   * @param  {string} folderId - Studio folder id
-   * @return {Promise<Array<Object>>}
-   */
-  uploadFiles(files, folderId) {
-    if (!folderId) {
-      throw Error('StudioHelper#uploadFiles: folderId not set');
-    }
-
-    let uploadFiles = this.getUploadInformation(files, folderId);
-
-    return this.batchUpload(uploadFiles);
-  }
-
-  /**
-   * Replace files
-   *
-   * @param {Array<Object>} files
-   * @param {string} files[].fileId - Studio file id
-   * @param {string} files[].localFile - Local file path
-   * @return {Promise<Array<Object>>}
-   */
-  replaceFiles(files) {
-    let replaceFiles = this.getReplaceInformation(files);
-    return this.batchUpload(replaceFiles);
-  }
-
-  /**
-   * Login
-   *
-   * @param  {string} username
-   * @param  {string} password
-   * @param  {string} token
-   * @param  {int} [longSession=1]
-   * @return {Promise}
-   */
-  login(username, password, token, longSession) {
-    let self = this;
-
-    longSession = longSession === 0 ? longSession : 1;
-
-    if (!username || !password) {
-      throw Error('StudioHelper#login: missing username and / or password');
-    }
-
-    return new Promise(function(resolve) {
-      return self._post('login', {
-        'username': username,
-        'password': password,
-        'token': token,
-        'longSession': longSession
-      }, { 'timeout': 10000 }, true).then(function(res) {
-        resolve(res);
-      }, function(err) {
-        resolve(err);
-      });
-
-      //resolve(username);
-    });
-  }
-
   getChangedFiles(studioFiles, localFiles, path, studioFolderId, options = {}) {
     let self = this;
 
@@ -1373,18 +1372,14 @@ class StudioHelper {
     });
   }
 
-  getFileDetails(fileId) {
-    let self = this;
-
-    return new Promise(function(resolve, reject) {
-      self._get('filedetails', fileId).then(function(res) {
-        if (res.status === 'error') {
-          reject(res.code);
-        }
-
-        resolve(res.result);
-      });
-    });
+  /**
+   * Get folders
+   *
+   * @param {string} [parentId] - Parent folder id
+   * @return {Promise<Object>}
+   */
+  getFolders(parentId) {
+    return this._get('folders', parentId);
   }
 
   /**
@@ -1609,24 +1604,6 @@ class StudioHelper {
 
       return res;
     });
-  }
-
-  /**
-   * Get folders
-   *
-   * @param {string} [parentId] - Parent folder id
-   * @return {Promise<Object>}
-   */
-  getFolders(parentId) {
-    return this._get('folders', parentId);
-  }
-
-  /**
-   * Not implemented in the API. Maybe someday
-   * @private
-   */
-  getFolderDetails(folderId) {
-    return this._get('folderdetails', folderId);
   }
 
   /**
