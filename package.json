@@ -4,7 +4,9 @@
   "description": "Crasman Studio API Helper",
   "main": "StudioHelper.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha test --bail"
+    "test": "./node_modules/.bin/mocha test --bail",
+    "jsdoc": "jsdoc2md StudioHelper.js",
+    "jsdoc2": "jsdoc2md test.js"
   },
   "keywords": [
     "studio-helper",
@@ -26,7 +28,7 @@
   },
   "devDependencies": {
     "eslint": "^3.8.1",
-    "jsdoc-to-markdown": "^2.0.0-alpha.15",
+    "jsdoc-to-markdown": "^4.0.1",
     "mocha": "^3.1.0",
     "mocha-sinon": "^1.1.6",
     "should": "^11.1.0",

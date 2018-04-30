@@ -203,7 +203,6 @@ class StudioHelper {
   /**
    * Match correct header settings
    *
-   * @private
    * @param {Object} options
    * @param {string} options.localFolder
    * @param {string} options.fileName
@@ -728,7 +727,7 @@ class StudioHelper {
   /**
    * Create folders found in local directory if not already created
    *
-   * @async Returns Promise
+   * @async
    * @param {Object} folderData
    * @param {string} folderData.folderId - Studio folder id
    * @param {string} folderData.localFolder - Local folder path
@@ -862,7 +861,7 @@ class StudioHelper {
    * }).then(function (res) {
    *   console.log(res.length + 'files uploaded');
    * })
-   * @async Returns Promise
+   * @async
    * @param {Object} settings
    * @param {Array<Object>} settings.folders
    * @param {string} settings.folders[].folderId - Studio folder id
@@ -922,7 +921,6 @@ class StudioHelper {
   /**
    * Get files of a folder
    *
-   * @private for now
    * @param {string} folderId - Studio folder id
    * @return {Promise<Array<Object>>}
    **/
@@ -947,7 +945,6 @@ class StudioHelper {
   /**
    * Delete files
    *
-   * @private for now
    * @param {Array<string>} files - Array of file ids
    * @return {Promise<Object>}
    **/
@@ -1081,7 +1078,7 @@ class StudioHelper {
    * Get file headers
    *
    * @param {string} fileId
-   * @returns
+   * @return {ResultObj}
    */
   getFileHeaders(fileId) {
     return this._get('fileheaders', fileId).then(function(res) {
@@ -1107,14 +1104,13 @@ class StudioHelper {
   /**
    * Update file headers
    *
-   * @async Returns Promise
-   * @private for now
+   * @async
    * @param {string} fileId
    * @param {FileHeaderSettings} headerSettings key / value pairs
    * @param {Object} [options]
    * @param {boolean} [options.log=false] log results
    * @param {string} [options.fileName=''] used for logging
-   * @returns {ResultObj}
+   * @return {ResultObj}
    */
   setFileHeaders(fileId, headerSettings, options) {
     const self = this;
@@ -1180,7 +1176,6 @@ class StudioHelper {
   /**
    * Get required information about files for upload
    *
-   * @private for now
    * @param {Array<string>} files - files with paths
    * @param {string} folderId - Studio folder id
    * @return {Array<Object>} Array of file information objects
@@ -1212,7 +1207,6 @@ class StudioHelper {
   /**
    * Get required information about files for replacement
    *
-   * @private for now
    * @param {Array<Object>} files
    * @param {string} files[].fileId - Studio file id
    * @param {string} files[].localFile - Local file path
@@ -1245,7 +1239,7 @@ class StudioHelper {
 
   /**
    * Upload files to a specified folder
-   * @private for now
+   *
    * @param  {Array<string>} files - file with path
    * @param  {string} folderId - Studio folder id
    * @return {Promise<Array<Object>>}
@@ -1262,7 +1256,7 @@ class StudioHelper {
 
   /**
    * Replace files
-   * @private for now
+   *
    * @param {Array<Object>} files
    * @param {string} files[].fileId - Studio file id
    * @param {string} files[].localFile - Local file path
@@ -1276,9 +1270,6 @@ class StudioHelper {
   /**
    * Login
    *
-   * /// Private for now
-   *
-   * @private
    * @param  {string} username
    * @param  {string} password
    * @param  {string} token
@@ -1405,7 +1396,7 @@ class StudioHelper {
 
   /**
    * Create folder
-   * @async Returns a promise
+   * @async
    * @param {Object} settings
    * @param {string} settings.name - Name of the new folder
    * @param {string} [settings.parentId] - Studio folder in which we want to create the new folder
@@ -1510,7 +1501,6 @@ class StudioHelper {
   /**
    * Delete folder
    *
-   * @private for now
    * @param {string} folderId
    * @return {Promise<Object>}
    */
@@ -1521,7 +1511,6 @@ class StudioHelper {
   /**
    * Delete child folders of a given folder
    *
-   * @private for now
    * @param {string} folderId
    * @return {Promise<Object>}
    */
@@ -1576,8 +1565,8 @@ class StudioHelper {
 
   /**
    * Get folder settings
-   * @async Returns Promise
-   * @private for now
+   *
+   * @async
    * @param {string} folderId
    * @returns {ResultObj} [ResultObj.result]{@link FolderSettings}
    */
@@ -1589,8 +1578,8 @@ class StudioHelper {
 
   /**
    * Update folder settings
-   * @async Returns Promise
-   * @private for now
+   * @async
+   *
    * @param {string} folderId
    * @param {FolderUpdateSettings} folderSettings settings
    * @param {Object} [options]
@@ -1625,7 +1614,6 @@ class StudioHelper {
   /**
    * Get folders
    *
-   * @private for now
    * @param {string} [parentId] - Parent folder id
    * @return {Promise<Object>}
    */
@@ -1643,8 +1631,6 @@ class StudioHelper {
 
   /**
    * Batch upload/replace files
-   *
-   * @private for now
    *
    * @param  {Array<object>} files
    * @return {Array<object>} result
