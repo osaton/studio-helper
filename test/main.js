@@ -114,8 +114,21 @@ describe('StudioHelper', function() {
       'strictSSL': strictSSL
     });
 
+    let addedTestFolder;
+
+    before(function () {
+      // create push folder
+      return studio.createFolder({
+        'parentId': mainFolder,
+        'name': 'getFolderSettings-test'
+      }).then(function (res) {
+        addedTestFolder = res.result.id;
+        return res.status.should.equal('ok');
+      });
+    });
+
     it('should change settings', function () {
-      return studio.getFolderSettings(mainFolder).then(function (res) {
+      return studio.getFolderSettings(addedTestFolder).then(function (res) {
         let originalSettings = res.result;
         let newSettings = JSON.parse(JSON.stringify(originalSettings));
 
@@ -127,18 +140,38 @@ describe('StudioHelper', function() {
         res.result.fileCacheProtected.should.be.type('boolean');
         res.result.apiFolder.should.be.type('boolean');
         res.result.noversioning.should.be.type('boolean');*/
+        originalSettings.fileCacheMaxAge.should.equal('0');
+        originalSettings.fileCacheProtected.should.equal('0');
+        originalSettings.apiFolder.should.equal(false);
+        originalSettings.noversioning.should.equal(false);
 
-        newSettings.fileCacheMaxAge = originalSettings.fileCacheMaxAge > 0 ? 0 : 1000;
-        newSettings.fileCacheProtected = originalSettings.fileCacheProtected ? 0 : 1;
-        newSettings.apiFolder = originalSettings.apiFolder ? 0 : 1;
-        newSettings.noversioning = originalSettings.noversioning ? 0 : 1;
+        newSettings.fileCacheMaxAge = 1000;
+        newSettings.fileCacheProtected = 1;
+        newSettings.apiFolder = 1;
+        newSettings.noversioning = 1;
 
-        return studio.updateFolderSettings(mainFolder, newSettings).then(function (res2) {
-          // TODO: check that settings have changed
-          return res2.status.should.equal('ok');
+        return studio.updateFolderSettings(addedTestFolder, newSettings).then(function (res2) {
+          res2.status.should.equal('ok');
+
+          return studio.getFolderSettings(addedTestFolder).then(res => {
+            res.status.should.equal('ok');
+            const settings = res.result;
+
+            settings.fileCacheMaxAge.should.equal('1000');
+            settings.fileCacheProtected.should.equal('1');
+            settings.apiFolder.should.equal('1');
+            settings.noversioning.should.equal('1');
+          });
         });
       });
-    })
+    });
+
+    after(function () {
+      // clean up folder
+      return studio.deleteFolder(addedTestFolder).then(function (res) {
+        return res.status.should.equal('ok');
+      });
+    });
   });
 
   describe('#getFolders', function () {
