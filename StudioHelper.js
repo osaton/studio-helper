@@ -747,7 +747,7 @@ class StudioHelper {
         'password': password,
         'token': token,
         'longSession': longSession
-      }, { 'timeout': 10000 }, true).then(function(res) {
+      }, { 'timeout': 40000 }, true).then(function(res) {
         resolve(res);
       }, function(err) {
         resolve(err);
