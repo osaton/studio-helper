@@ -1300,7 +1300,7 @@ class StudioHelper {
     return replaceReadyFiles;
   }
 
-  getChangedFiles(studioFiles, localFiles, path, studioFolderId, options = {}) {
+  getChangedFiles(studioFiles, localFiles, dirPath, studioFolderId, options = {}) {
     let self = this;
 
     return new Promise(function(resolve) {
@@ -1314,12 +1314,12 @@ class StudioHelper {
         // File found in local and studio folder
         if (localFileIndex !== -1) {
           let fileName = localFiles[localFileIndex],
-              fileStats = fs.statSync(path + '/' + fileName),
+              fileStats = fs.statSync(path.join(dirPath, fileName)),
               changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
 
           // If local file is newer
           if (changedTime > +studioFile.createdAt) {
-            let fileInfo = self.getLocalFileInfo(path + '/' + fileName);
+            let fileInfo = self.getLocalFileInfo(path.join(dirPath, fileName));
 
             // and if it has different sha1, add it to upload array
             if (studioFileSha1 !== fileInfo.sha1) {
@@ -1329,7 +1329,7 @@ class StudioHelper {
                 'id': studioFile.id,
                 'type': fileInfo.type,
                 'size': fileInfo.size,
-                'localFolder': path,
+                'localFolder': dirPath,
                 'name': fileName,
                 'sha1': fileInfo.sha1,
                 'data': fileInfo.data,
@@ -1346,11 +1346,11 @@ class StudioHelper {
       // Add new files that are not yet uploaded
       for (let i = 0, l = localFiles.length; i < l; i++) {
         let fileName = localFiles[i],
-            fileInfo = self.getLocalFileInfo(path + '/' + fileName);
+            fileInfo = self.getLocalFileInfo(path.join(dirPath, fileName));
 
         const fileHeaders = self._getPossibleFileHeaders({
           'fileName': fileName,
-          'localFolder': path,
+          'localFolder': dirPath,
           'allHeaders': options.createdFileHeaders
         });
 
@@ -1359,7 +1359,7 @@ class StudioHelper {
           'action': 'upload',
           'name': fileName,
           'folderId': studioFolderId,
-          'localFolder': path,
+          'localFolder': dirPath,
           'type': fileInfo.type,
           'size': fileInfo.size,
           'sha1': fileInfo.sha1,
@@ -1686,7 +1686,7 @@ class StudioHelper {
         });
 
         for (let j = 0, l2 = localFiles.length; j < l2; j++) {
-          let itemStat = fs.lstatSync(folder.localFolder + '/' + localFiles[j]);
+          let itemStat = fs.lstatSync(path.join(folder.localFolder, localFiles[j]));
 
           if (itemStat.isFile()) {
             folderData.files.push(localFiles[j]);
