@@ -32,7 +32,6 @@ const API_URL = '/studioapi/v2/',
  * @class
  */
 class StudioHelper {
-
   /**
    * @typedef {Object} ResultObj
    * @property {string} status "ok" or "error"
@@ -1707,7 +1706,6 @@ class StudioHelper {
       return Promise.resolve(self._flattenArray(res));
     });
   }
-
 }
 
 module.exports = StudioHelper;
