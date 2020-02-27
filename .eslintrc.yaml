@@ -5,6 +5,9 @@ env:
   node: true
   es6: true
 
+parserOptions:
+  ecmaVersion: 8
+
 # globals:
   #########################
   ## Only add globals if you're absolutely certain they need to be globals
