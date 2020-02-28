@@ -60,6 +60,7 @@
 | [settings.strictSSL] | <code>boolean</code> | <code>true</code> | Change to false if you're using self-signed certificate |
 | [settings.loginPromptEnabled] | <code>boolean</code> | <code>true</code> | Show login prompt if authentication fails |
 | [settings.credentialsFile] | <code>string</code> | <code>&quot;.studio-credentials&quot;</code> | File in which credentials are saved |
+| [settings.useCacheDir] | <code>boolean</code> | <code>false</code> | Store credentials file in Node modules cache dir |
 | [settings.ignoreFile] | <code>string</code> | <code>&quot;.studio-ignore&quot;</code> | Utilised by [push](#StudioHelper+push) method. Uses gitignore [spec](https://git-scm.com/docs/gitignore) |
 
 **Example**  

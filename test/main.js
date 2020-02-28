@@ -42,14 +42,62 @@ describe('StudioHelper', function() {
     });
   });
 
-  it('should initialize', function () {
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
+
+  describe('Initialize', function() {
+    it('should initialize', function () {
+      let studio = new StudioHelper({
+        'studio': studioHost,
+        'strictSSL': strictSSL
+      });
+
+      should(studio).be.an.instanceOf(StudioHelper);
     });
 
-    should(studio).be.an.instanceOf(StudioHelper);
+    it('should initialize with `useCacheDir` option', function () {
+      let studio = new StudioHelper({
+        'studio': studioHost,
+        'strictSSL': strictSSL,
+        'useCacheDir': true
+      });
+
+      should(studio).be.an.instanceOf(StudioHelper);
+    });
   });
+
+  describe('Credentials', function () {
+    /*
+    // This is tested when running other tests.
+    // If enabled have to make sure the credentials are not overwritten to prevent test relogin
+    describe('without `useCacheDir` option', function () {
+    });
+    */
+    describe('with `useCacheDir` option', function () {
+      it('should be able to write credentials', function () {
+        let studio = new StudioHelper({
+          'studio': studioHost,
+          'strictSSL': strictSSL,
+          'useCacheDir': true
+        });
+
+        const res = studio._updateCredentials({ 'test': 'yes2' });
+        res.should.equal(true);
+      });
+
+      it('should be able to read credentials', function () {
+        let studio = new StudioHelper({
+          'studio': studioHost,
+          'strictSSL': strictSSL,
+          'useCacheDir': true
+        });
+
+        let res = studio._updateCredentials({ 'test': 'yes2' });
+        res.should.equal(true);
+        res = studio._getCredentials();
+        res.should.have.property('test', 'yes2');
+      });
+    })
+  });
+
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {

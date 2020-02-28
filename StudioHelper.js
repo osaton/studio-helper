@@ -9,7 +9,8 @@ const request = require('request'),
       os = require('os'),
       ignore = require('ignore'),
       throat = require('throat')(Promise),
-      ProgressBar = require('progress');
+      ProgressBar = require('progress'),
+      findCacheDir = require('find-cache-dir');
 
 //Promise.longStackTraces();
 
@@ -46,6 +47,7 @@ class StudioHelper {
    * @param {boolean} [settings.strictSSL=true] - Change to false if you're using self-signed certificate
    * @param {boolean} [settings.loginPromptEnabled=true] - Show login prompt if authentication fails
    * @param {string}  [settings.credentialsFile=.studio-credentials] - File in which credentials are saved
+   * @param {boolean} [settings.useCacheDir=false] - Store credentials file in Node modules cache dir
    * @param {string}  [settings.ignoreFile=.studio-ignore] - Utilised by [push]{@link StudioHelper#push} method. Uses gitignore {@link https://git-scm.com/docs/gitignore|spec}
    */
   constructor(settings) {
@@ -78,6 +80,12 @@ class StudioHelper {
       this.credentialsFile = settings.credentialsFile;
     } else {
       this.credentialsFile = CREDENTIALS_FILE;
+    }
+
+    if (settings.useCacheDir) {
+      const thunk = findCacheDir({ 'name': 'studio-helper', 'thunk': true })
+      this.credentialsFile = thunk(this.credentialsFile);
+      this.credentialsDir = thunk();
     }
 
     this.credentials = this._getCredentials();
@@ -620,15 +628,19 @@ class StudioHelper {
    * @private
    */
   _updateCredentials(data) {
-    let self = this;
-
     const dataString = this._getEncryptedString(data);
 
-    fs.writeFile(this.credentialsFile, dataString, function(err) {
-      if (err) {
-        self._log(err);
+    try {
+      if (this.credentialsDir) {
+        fs.mkdirSync(this.credentialsDir, { 'recursive': true });
       }
-    });
+
+      fs.writeFileSync(this.credentialsFile, dataString);
+      return true;
+    } catch (err) {
+      this._log(err);
+      return false;
+    }
   }
 
   _createDirFolders(folderData) {
@@ -1122,8 +1134,6 @@ class StudioHelper {
       'sha1': sha1,
       'createNewVersion': settings.createNewVersion ? 1 : 0
     }
-
-    console.log('replace', fileSettings);
 
     return new Promise(function(resolve, reject) {
       // Start upload
