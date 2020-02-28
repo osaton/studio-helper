@@ -771,6 +771,7 @@ class StudioHelper {
    *     folderId: '568a7a27add453aa1a4f4f58',
    *     localFolder: 'dist/',
    *     includeSubFolders: true,
+   *     createNewFileVersions: false,
    *     createdFolderSettings: {
    *       'dist/master': { // Regex match
    *         cacheMaxAge: 64800
@@ -793,6 +794,7 @@ class StudioHelper {
    * @param {Array<Object>} settings.folders
    * @param {string} settings.folders[].folderId - Studio folder id
    * @param {string} settings.folders[].localFolder - Local folder path
+   * @param {boolean} [settings.folders[].createNewFileVersions=true] - Create new versions of uploaded / updated files. Use false to save disk space if you don't need version history.
    * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
    * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
    * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file paths (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
@@ -824,15 +826,18 @@ class StudioHelper {
           'localFolder': folderRes.result.localFolder
         };
 
-        // If folder had createdFileHeaders options, attach them to the upload options
+
         const folderSettingsIndex = folderLocalPaths.indexOf(folderRes.result.baseLocalFolder);
 
         if (folderSettingsIndex !== -1) {
           const folderSettings = settings.folders[folderSettingsIndex];
 
+          // If folder had createdFileHeaders options, attach them to the upload options
           if (folderSettings.createdFileHeaders) {
             pushFolderData.createdFileHeaders = folderSettings.createdFileHeaders;
           }
+
+          pushFolderData.createNewFileVersions = folderSettings.createNewFileVersions;
         }
 
         pushFolders.push(pushFolderData);
@@ -1031,10 +1036,12 @@ class StudioHelper {
    * @param {Array<Object>} files
    * @param {string} files[].fileId - Studio file id
    * @param {string} files[].localFile - Local file path
+   * @param {Object} [options]
+   * @param {boolean} [options.createNewVersion=true] - Create new version of files
    * @return {Promise<Array<Object>>}
    */
-  replaceFiles(files) {
-    let replaceFiles = this.getReplaceInformation(files);
+  replaceFiles(files, options = {}) {
+    let replaceFiles = this.getReplaceInformation(files, options);
     return this.batchUpload(replaceFiles);
   }
 
@@ -1103,14 +1110,24 @@ class StudioHelper {
 
   replaceFile(fileId, fileType, fileSize, sha1, fileData, fileName, localFolder, options = {}) {
     let self = this;
+
+    const defaults = {
+      'createNewVersion': true,
+    };
+
+    const settings = Object.assign(defaults, options);
+    const fileSettings = {
+      'filetype': fileType,
+      'filesize': fileSize,
+      'sha1': sha1,
+      'createNewVersion': settings.createNewVersion ? 1 : 0
+    }
+
+    console.log('replace', fileSettings);
+
     return new Promise(function(resolve, reject) {
       // Start upload
-      return self._post('replace/' + fileId, {
-        'filetype': fileType,
-        'filesize': fileSize,
-        'sha1': sha1,
-        'createNewVersion': 1
-      }).then(function(res) {
+      return self._post('replace/' + fileId, fileSettings).then(function(res) {
         if (res.result && res.result.uploadToken) {
           let uploadToken = res.result.uploadToken;
           return self._replaceFileChunks(fileId, uploadToken, fileData, fileName).then(function() {
@@ -1272,9 +1289,17 @@ class StudioHelper {
    * @param {Array<Object>} files
    * @param {string} files[].fileId - Studio file id
    * @param {string} files[].localFile - Local file path
+   * @param {Object} options
+   * @param {boolean} [options.createNewVersion=true] - Create new version of files
    */
-  getReplaceInformation(files) {
+  getReplaceInformation(files, options = {}) {
     let replaceReadyFiles = [];
+
+    const defaults = {
+      'createNewVersion': true
+    };
+
+    const settings = Object.assign(defaults, options);
 
     for (let i = 0, l = files.length; i < l; i++) {
       let fileId = files[i].fileId,
@@ -1292,7 +1317,7 @@ class StudioHelper {
         'name': fileName,
         'sha1': fileInfo.sha1,
         'data': fileInfo.data,
-        'createNewVersion': 1
+        'createNewVersion': settings.createNewVersion ? 1 : 0
       });
     }
 
@@ -1301,6 +1326,14 @@ class StudioHelper {
 
   getChangedFiles(studioFiles, localFiles, dirPath, studioFolderId, options = {}) {
     let self = this;
+
+    const defaults = {
+      'createNewVersion': true,
+      'createdFileHeaders': null
+    };
+
+    const settings = Object.assign(defaults, options);
+
 
     return new Promise(function(resolve) {
       let fileUploadArray = [];
@@ -1332,7 +1365,7 @@ class StudioHelper {
                 'name': fileName,
                 'sha1': fileInfo.sha1,
                 'data': fileInfo.data,
-                'createNewVersion': 1
+                'createNewVersion': settings.createNewVersion ? 1 : 0
               });
             }
           }
@@ -1350,7 +1383,7 @@ class StudioHelper {
         const fileHeaders = self._getPossibleFileHeaders({
           'fileName': fileName,
           'localFolder': dirPath,
-          'allHeaders': options.createdFileHeaders
+          'allHeaders': settings.createdFileHeaders
         });
 
         // Add file to be replaced
@@ -1624,6 +1657,7 @@ class StudioHelper {
         case 'upload':
           return self.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder, options);
         case 'replace':
+          options.createNewVersion = file.createNewVersion;
           return self.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder, options);
       }
     });
@@ -1672,6 +1706,7 @@ class StudioHelper {
           'localFolder': folder.localFolder,
           'includeSubFolders': folder.includeSubFolders,
           'createdFileHeaders': folder.createdFileHeaders,
+          'createNewFileVersions': folder.createNewFileVersions,
           'files': []
         };
 
@@ -1700,7 +1735,8 @@ class StudioHelper {
 
     return Promise.resolve(foldersData).mapSeries(function(folderData) {
       return self._uploadChanged(folderData.folderId, folderData.files, folderData.localFolder, {
-        'createdFileHeaders': folderData.createdFileHeaders
+        'createdFileHeaders': folderData.createdFileHeaders,
+        'createNewVersion': folderData.createNewFileVersions
       });
     }).then(function(res) {
       return Promise.resolve(self._flattenArray(res));

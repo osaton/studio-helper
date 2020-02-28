@@ -3,6 +3,7 @@
 const should = require('should'),
       StudioHelper = require('../StudioHelper'),
       path = require('path'),
+      fs = require('fs'),
       Promise = require('bluebird'),
       mainFolder = '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
       studioHost = 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
@@ -12,6 +13,11 @@ require('mocha-sinon');
 
 let getFolder = function (folderPath) {
   return path.join(__dirname, folderPath);
+}
+
+const touch = function (filePath) {
+  const date = new Date();
+  return fs.utimesSync(path.join(__dirname, filePath), date, date);
 }
 
 describe('StudioHelper', function() {
@@ -340,13 +346,13 @@ describe('StudioHelper', function() {
       });
     });
 
-    it('should upload files over 25MB', function () {
+    it('should upload files over 12MB', function () {
       let studio = new StudioHelper({
         'studio': studioHost,
         'strictSSL': strictSSL
       });
 
-      let files = [path.join(getFolder('files'), '13m-file')];
+      let files = [path.join(getFolder('files'), '13mb-file')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
         res.should.have.lengthOf(1);
@@ -369,7 +375,7 @@ describe('StudioHelper', function() {
   describe('#replaceFiles', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
-    let localTestFiles = [path.join(getFolder('files'), '13m-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
+    let localTestFiles = [path.join(getFolder('files'), '5mb-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
     let studio = new StudioHelper({
       'studio': studioHost,
       'strictSSL': strictSSL
@@ -401,6 +407,25 @@ describe('StudioHelper', function() {
 
       //console.log(files);
       return studio.replaceFiles(files).then(function(res) {
+        res[0].status.should.equal('ok');
+        res[1].status.should.equal('ok');
+      });
+    });
+
+    it('should replace files with new versions disabled', function () {
+      //console.log(addedTestFiles);
+      let files = [{
+        'fileId': addedTestFiles[0].result.createdFileId,
+        'localFile': localTestFiles[0]
+      }, {
+        'fileId': addedTestFiles[1].result.createdFileId,
+        'localFile': localTestFiles[1]
+      }];
+
+      //console.log(files);
+      return studio.replaceFiles(files, {
+        'createNewVersion': false
+      }).then(function(res) {
         res[0].status.should.equal('ok');
         res[1].status.should.equal('ok');
       });
@@ -553,29 +578,29 @@ describe('StudioHelper', function() {
     it('should create folders found in local directory', function () {
       return studio.createDirectoryFolders({
         'folderId': addedTestFolder,
-        'localFolder': getFolder('folders')
+        'localFolder': getFolder('folders/testfolder1')
       }).then(function (res) {
-        return res.should.have.lengthOf(2);
+        return res.should.have.lengthOf(1);
       })
     });
 
     it('should create folders and sub folders found in local directory', function () {
       return studio.createDirectoryFolders({
         'folderId': addedTestFolder,
-        'localFolder': getFolder('folders'),
+        'localFolder': getFolder('folders/testfolder1'),
         'includeSubFolders': true
       }).then(function (res) {
         res.forEach(function (folder) {
           folder.status.should.equal('ok');
         });
-        return res.should.have.lengthOf(8);
+        return res.should.have.lengthOf(4);
       })
     });
 
     it('should not create folders if already created', function () {
       return studio.createDirectoryFolders({
         'folderId': addedTestFolder,
-        'localFolder': getFolder('folders'),
+        'localFolder': getFolder('folders/testfolder1'),
         'includeSubFolders': true
       }).then(function (res) {
         let createResIds = [];
@@ -583,10 +608,10 @@ describe('StudioHelper', function() {
           folder.status.should.equal('ok');
           createResIds.push(folder.result.id);
         })
-        res.should.have.lengthOf(8);
+        res.should.have.lengthOf(4);
         return studio.createDirectoryFolders({
           'folderId': addedTestFolder,
-          'localFolder': getFolder('folders'),
+          'localFolder': getFolder('folders/testfolder1'),
           'includeSubFolders': true
         }).then(function (res) {
           // Ids should be the same as before
@@ -595,7 +620,7 @@ describe('StudioHelper', function() {
             //res[i].result.id.should.equal(createRes[i].result.id);
           }
 
-          return res.should.have.lengthOf(8);
+          return res.should.have.lengthOf(4);
         })
       })
     });
@@ -603,7 +628,7 @@ describe('StudioHelper', function() {
     it('should return past results if cache === true', function () {
       return studio.createDirectoryFolders({
         'folderId': addedTestFolder,
-        'localFolder': getFolder('folders'),
+        'localFolder': getFolder('folders/testfolder1'),
         'includeSubFolders': true,
         'cache': true
       }).then(function (res) {
@@ -612,10 +637,10 @@ describe('StudioHelper', function() {
           folder.status.should.equal('ok');
           createResIds.push(folder.result.id);
         })
-        res.should.have.lengthOf(8);
+        res.should.have.lengthOf(4);
         return studio.createDirectoryFolders({
           'folderId': addedTestFolder,
-          'localFolder': getFolder('folders'),
+          'localFolder': getFolder('folders/testfolder1'),
           'includeSubFolders': true
         }).then(function (res) {
           // Ids should be the same as before
@@ -624,7 +649,7 @@ describe('StudioHelper', function() {
             //res[i].result.id.should.equal(createRes[i].result.id);
           }
 
-          return res.should.have.lengthOf(8);
+          return res.should.have.lengthOf(4);
         })
       })
     });
@@ -664,7 +689,7 @@ describe('StudioHelper', function() {
         'strictSSL': strictSSL
       });
 
-      before(function () {
+      beforeEach(function () {
         // create push folder
         return studio.createFolder({
           'parentId': mainFolder,
@@ -693,6 +718,27 @@ describe('StudioHelper', function() {
         }).then(function (res) {
           return Promise.resolve(res);
         });
+      });
+
+      it('Should work with different settings.folder[].createNewFileVersions settings', function () {
+        let studio = new StudioHelper({
+          'studio': studioHost,
+          'strictSSL': strictSSL
+        });
+
+        return studio.push({
+          'folders': [{
+            'folderId': testFolder1,
+            'createNewFileVersions': true,
+            'localFolder': getFolder('folders/testfolder1')
+          }, {
+            'folderId': testFolder2,
+            'createNewFileVersions': false,
+            'localFolder': getFolder('folders/testfolder2')
+          }]
+        }).then(function (res) {
+          return res.should.have.lengthOf(4);
+        })
       });
 
       it('should push files to multiple folders', function () {
@@ -739,13 +785,13 @@ describe('StudioHelper', function() {
         return studio.push({
           'folders': [{
             'folderId': addedPushFolder,
-            'localFolder': getFolder('folders'),
+            'localFolder': getFolder('folders/testfolder1'),
             'includeSubFolders': true
           }]
         }).then(function (res) {
-          console.log.calledWith('[Studio] Created folder: testfolder2').should.equal(true);
+          console.log.calledWith('[Studio] Created folder: subfolder1').should.equal(true);
           console.log.calledWith('[Studio] Created folder: subsubsubfolder1').should.equal(true);
-          return res.should.have.lengthOf(10);
+          return res.should.have.lengthOf(5);
         })
       });
 
@@ -862,6 +908,7 @@ describe('StudioHelper', function() {
           }]
         }).then(function (res) {
           res.should.have.lengthOf(3);
+
           return studio.push({
             'folders': [{
               'folderId': addedPushFolder,
@@ -874,25 +921,62 @@ describe('StudioHelper', function() {
         });
       });
 
-      it('should upload changed files', function () {
-        return studio.push({
+      it('should upload changed files', async function () {
+        let res = await studio.push({
           'folders': [{
             'folderId': addedPushFolder,
             'localFolder': getFolder('folders/testfolder1/subfolder1'),
             'includeSubFolders': true
           }]
-        }).then(function (res) {
-          res.should.have.lengthOf(3);
-          return studio.push({
-            'folders': [{
-              'folderId': addedPushFolder,
-              'localFolder': getFolder('folders/testfolder1/subfolder1'),
-              'includeSubFolders': true
-            }]
-          }).then(function (res) {
-            return res.should.have.lengthOf(0);
-          })
         });
+
+        res.should.have.lengthOf(3);
+        console.log.reset();
+
+        // update timestamp so we can pass timestamp validation
+        touch('folders/testfolder1-changed/subfolder1/subsubfolder1/file1.js');
+
+        res = await studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1-changed/subfolder1'),
+            'includeSubFolders': true
+          }]
+        });
+
+        // The touched file should be updated
+        console.log.calledWithMatch(/\[Studio\] Updated: (.)*subfolder1\/subsubfolder1\/file1\.js/).should.equal(true);
+        return res.should.have.lengthOf(1);
+      });
+
+      it('should upload changed files with settings.folder[].createNewFileVersions === false', async function () {
+        let res = await studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1/subfolder1'),
+            'includeSubFolders': true,
+            'createNewFileVersions': false
+          }]
+        });
+
+        res.should.have.lengthOf(3);
+        console.log.reset();
+
+        // update timestamp so we can pass timestamp validation
+        touch('folders/testfolder1-changed/subfolder1/subsubfolder1/file1.js');
+
+        res = await studio.push({
+          'folders': [{
+            'folderId': addedPushFolder,
+            'localFolder': getFolder('folders/testfolder1-changed/subfolder1'),
+            'includeSubFolders': true,
+            'createNewFileVersions': false
+          }]
+        });
+
+        // The touched file should be updated
+        console.log.calledWithMatch(/\[Studio\] Updated: (.)*subfolder1\/subsubfolder1\/file1\.js/).should.equal(true);
+        return res.should.have.lengthOf(1);
       });
 
 
