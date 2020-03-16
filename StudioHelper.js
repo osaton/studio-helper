@@ -1343,21 +1343,23 @@ class StudioHelper {
     };
 
     const settings = Object.assign(defaults, options);
-
-
+    const fileArray = [];
+    // `data` property for storing additional information about changed files
+    fileArray.data = {
+      // Files only found in Studio
+      'remoteOnlyFiles': []
+    }
     return new Promise(function(resolve) {
-      let fileUploadArray = [];
-
       for (let i = 0, l = studioFiles.length; i < l; i++) {
-        let studioFile = studioFiles[i],
-            localFileIndex = localFiles.indexOf(studioFile.name),
-            studioFileSha1 = studioFile.details && studioFile.details.sha1 || null;
+        const studioFile = studioFiles[i];
+        const localFileIndex = localFiles.indexOf(studioFile.name);
+        const studioFileSha1 = studioFile.details && studioFile.details.sha1 || null;
+        const fileName = localFiles[localFileIndex];
 
         // File found in local and studio folder
         if (localFileIndex !== -1) {
-          let fileName = localFiles[localFileIndex],
-              fileStats = fs.statSync(path.join(dirPath, fileName)),
-              changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
+              const fileStats = fs.statSync(path.join(dirPath, fileName));
+              const changedTime = Math.round(new Date(fileStats.mtime).getTime() / 1000);
 
           // If local file is newer
           if (changedTime > +studioFile.createdAt) {
@@ -1365,7 +1367,7 @@ class StudioHelper {
 
             // and if it has different sha1, add it to upload array
             if (studioFileSha1 !== fileInfo.sha1) {
-              fileUploadArray.push({
+              fileArray.push({
                 'action': 'replace',
                 'folderId': studioFolderId,
                 'id': studioFile.id,
@@ -1382,6 +1384,14 @@ class StudioHelper {
 
           // Remove it from localFiles array. We only want new files to remain there
           localFiles.splice(localFileIndex, 1);
+        } else {
+          fileArray.data.remoteOnlyFiles.push({
+            'localFolder': dirPath,
+            'folderId': studioFolderId,
+            'name': studioFile.name,
+            'id': studioFile.id,
+            'size': studioFile.size
+          });
         }
       }
 
@@ -1397,7 +1407,7 @@ class StudioHelper {
         });
 
         // Add file to be replaced
-        fileUploadArray.push({
+        fileArray.push({
           'action': 'upload',
           'name': fileName,
           'folderId': studioFolderId,
@@ -1410,7 +1420,7 @@ class StudioHelper {
         });
       }
 
-      return resolve(fileUploadArray);
+      return resolve(fileArray);
     });
   }
 
@@ -1678,13 +1688,14 @@ class StudioHelper {
   /**
    * @private
    */
-  _uploadChanged(folderId, files, path, uploadOptions) {
+  _uploadChanged(folderId, files, path, options) {
     let self = this;
 
     return new Promise(function(resolve) {
       return self.getFiles(folderId).then(function(studioFiles) {
-        return self.getChangedFiles(studioFiles, files, path, folderId, uploadOptions).then(function(changedFiles) {
+        return self.getChangedFiles(studioFiles, files, path, folderId, options).then(function(changedFiles) {
           return self.batchUpload(changedFiles).then(function(res) {
+            res.data = changedFiles.data;
             resolve(res);
           });
         });
@@ -1743,13 +1754,26 @@ class StudioHelper {
       }
     }
 
+    const remoteOnlyFiles = [];
     return Promise.resolve(foldersData).mapSeries(function(folderData) {
       return self._uploadChanged(folderData.folderId, folderData.files, folderData.localFolder, {
         'createdFileHeaders': folderData.createdFileHeaders,
         'createNewVersion': folderData.createNewFileVersions
+      }).then(res => {
+        if (res.data && res.data.remoteOnlyFiles.length) {
+          remoteOnlyFiles.push(...res.data.remoteOnlyFiles);
+        }
+
+        return res;
       });
-    }).then(function(res) {
-      return Promise.resolve(self._flattenArray(res));
+    }).then((res) => {
+      const flatRes = [].concat(...res);
+
+      flatRes.data = {
+        remoteOnlyFiles
+      }
+
+      return flatRes;
     });
   }
 }

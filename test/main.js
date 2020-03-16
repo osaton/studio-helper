@@ -5,7 +5,7 @@ const should = require('should'),
       path = require('path'),
       fs = require('fs'),
       Promise = require('bluebird'),
-      mainFolder = '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
+      mainParentFolder = '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
       studioHost = 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
       strictSSL = true; // Change to false if using self-signed certificate
 
@@ -20,9 +20,12 @@ const touch = function (filePath) {
   return fs.utimesSync(path.join(__dirname, filePath), date, date);
 }
 
+
+
 describe('StudioHelper', function() {
   this.timeout(0);
-
+  let mainFolder;
+  let studio;
   beforeEach(function () {
     let log = console.log;
     this.sinon.stub(console, 'log', function() {
@@ -30,15 +33,29 @@ describe('StudioHelper', function() {
     });
   });
 
-  // Clean up test folders after tests
-  after(function () {
-    let studio = new StudioHelper({
+  // Create main test folder that hosts all created folders / files
+  before(async function () {
+    studio = new StudioHelper({
       'studio': studioHost,
       'strictSSL': strictSSL
     });
 
-    return studio.deleteChildFolders(mainFolder).then(function (res) {
-      return res.result.should.equal(true);
+    let res = await studio.deleteChildFolders(mainParentFolder);
+    res.status.should.equal('ok');
+
+    res = await studio.createFolder({
+      'parentId': mainParentFolder,
+      'name': 'mainTestFolder'
+    });
+
+    res.status.should.equal('ok');
+    mainFolder = res.result.id;
+  });
+
+  // Remove mainfolder containing all test data so we don't have to delete folders / files after every test
+  after(function () {
+    return studio.deleteFolder(mainFolder).then(function (res) {
+      return res.status.should.equal('ok');
     });
   });
 
@@ -101,11 +118,6 @@ describe('StudioHelper', function() {
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
       let uploadFiles = studio.getUploadInformation(files, 'someMadeUpFolder');
 
@@ -124,11 +136,6 @@ describe('StudioHelper', function() {
 
   describe('#deleteChildFolders', function () {
     it('should delete child folders of a given folderid', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.deleteChildFolders(mainFolder).then(function (res) {
         return res.result.should.equal(true);
       });
@@ -136,11 +143,6 @@ describe('StudioHelper', function() {
   });
 
   describe('#getFolderSettings', function () {
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
-
     it('should get folder settings', function () {
       return studio.getFolderSettings(mainFolder).then(function (res) {
         res.result.should.have.property('fileCacheMaxAge');
@@ -163,11 +165,6 @@ describe('StudioHelper', function() {
   });
 
   describe('#updateFolderSettings', function () {
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
-
     let addedTestFolder;
 
     before(function () {
@@ -219,39 +216,20 @@ describe('StudioHelper', function() {
         });
       });
     });
-
-    after(function () {
-      // clean up folder
-      return studio.deleteFolder(addedTestFolder).then(function (res) {
-        return res.status.should.equal('ok');
-      });
-    });
   });
 
   describe('#getFolders', function () {
-    let addedTestFolder;
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
-
     before(function () {
       // create push folder
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'copyDirectoryFolders-test'
       }).then(function (res) {
-        addedTestFolder = res.result.id;
         return res.status.should.equal('ok');
       });
     });
 
     it('should get folders', function (done) {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       studio.getFolders(mainFolder).then(function (res) {
         if (res.status === 'ok' && Array.isArray(res.result)) {
           done();
@@ -259,22 +237,10 @@ describe('StudioHelper', function() {
         //return res.status.should.equal('ok');
       });
     });
-
-    after(function () {
-      // clean up folder
-      return studio.deleteFolder(addedTestFolder).then(function (res) {
-        return res.status.should.equal('ok');
-      });
-    });
   });
 
   describe('#createFolder', function () {
     it('should create folder', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'createFolderTest'
@@ -285,11 +251,6 @@ describe('StudioHelper', function() {
     });
 
     it('should return the already created folder if addIfExists === false', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'createFolderTest-logging',
@@ -308,11 +269,6 @@ describe('StudioHelper', function() {
 
     it('should create folder and log result if logCreated === true', function () {
       console.log.reset();
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'createFolderTest-logging',
@@ -327,10 +283,6 @@ describe('StudioHelper', function() {
 
     it('should not log if folder already exists when addIfExists === false and logCreated === true', function () {
       console.log.reset();
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
 
       return studio.createFolder({
         'parentId': mainFolder,
@@ -349,11 +301,6 @@ describe('StudioHelper', function() {
     let uploadFilesFolderId;
 
     before(function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'uploadFilesTest'
@@ -365,12 +312,6 @@ describe('StudioHelper', function() {
     });
 
     it('should upload files to specific folder', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
-
       let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
@@ -381,11 +322,6 @@ describe('StudioHelper', function() {
     });
 
     it('should upload empty files', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       let files = [path.join(getFolder('files'), '0-file')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
@@ -395,27 +331,11 @@ describe('StudioHelper', function() {
     });
 
     it('should upload files over 12MB', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       let files = [path.join(getFolder('files'), '13mb-file')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
         res.should.have.lengthOf(1);
         return res[0].status.should.equal('ok');
-      });
-    });
-
-    after(function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
-      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
-        return Promise.resolve(res);
       });
     });
   });
@@ -424,10 +344,6 @@ describe('StudioHelper', function() {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('files'), '5mb-file'), path.join(getFolder('folders/testfolder1'), 'file1.js')];
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
 
     before(function () {
       return studio.createFolder({
@@ -478,22 +394,12 @@ describe('StudioHelper', function() {
         res[1].status.should.equal('ok');
       });
     });
-
-    after(function () {
-      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
-        return Promise.resolve(res);
-      });
-    });
   });
 
   describe('#getFileHeaders', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
 
     before(function () {
       return studio.createFolder({
@@ -509,7 +415,6 @@ describe('StudioHelper', function() {
       });
     });
 
-
     it('should get file headers', function () {
       //console.log(addedTestFiles);
       let files = [{
@@ -524,22 +429,13 @@ describe('StudioHelper', function() {
         should(res.result.headers).not.be.ok();
       });
     });
-
-    after(function () {
-      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
-        return Promise.resolve(res);
-      });
-    });
   });
 
   describe('#setFileHeaders', function () {
     let uploadFilesFolderId;
     let addedTestFiles;
     let localTestFiles = [path.join(getFolder('folders/testfolder1'), 'file1.js')];
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
+
     const customHeaders = {
       //'Service-Worker-Allowed': '/',
       'Custom-Header': 'test',
@@ -597,20 +493,10 @@ describe('StudioHelper', function() {
         });
       });
     });
-
-    after(function () {
-      return studio.deleteFolder(uploadFilesFolderId).then(function (res) {
-        return Promise.resolve(res);
-      });
-    });
   });
 
   describe('#createDirectoryFolders', function () {
     let addedTestFolder;
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
 
     beforeEach(function () {
       // create push folder
@@ -701,22 +587,10 @@ describe('StudioHelper', function() {
         })
       })
     });
-
-    afterEach(function () {
-      // clean up folder
-      return studio.deleteFolder(addedTestFolder).then(function (res) {
-        return res.status.should.equal('ok');
-      });
-    });
   });
 
   describe('#deleteFolder', function () {
     it('should delete folder', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.createFolder({
         'parentId': mainFolder,
         'name': 'deleteFolderTest'
@@ -732,10 +606,6 @@ describe('StudioHelper', function() {
   describe('#push', function () {
     describe('settings.folder[].includeSubFolders === false', function () {
       let testFolder1, testFolder2;
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
 
       beforeEach(function () {
         // create push folder
@@ -753,27 +623,9 @@ describe('StudioHelper', function() {
             return res.status.should.equal('ok');
           });
         });
-
-        return Promise.resolve([testFolder1, testFolder2]).mapSeries(function(folder) {
-          return studio.getFiles(folder).then(function (files) {
-            let fileIds = [];
-
-            for (let i=0, l=files.length; i<l; i++) {
-              fileIds.push(files[i].id);
-            }
-            return studio.deleteFiles(fileIds);
-          });
-        }).then(function (res) {
-          return Promise.resolve(res);
-        });
       });
 
       it('Should work with different settings.folder[].createNewFileVersions settings', function () {
-        let studio = new StudioHelper({
-          'studio': studioHost,
-          'strictSSL': strictSSL
-        });
-
         return studio.push({
           'folders': [{
             'folderId': testFolder1,
@@ -790,11 +642,6 @@ describe('StudioHelper', function() {
       });
 
       it('should push files to multiple folders', function () {
-        let studio = new StudioHelper({
-          'studio': studioHost,
-          'strictSSL': strictSSL
-        });
-
         return studio.push({
           'folders': [{
             'folderId': testFolder1,
@@ -812,10 +659,6 @@ describe('StudioHelper', function() {
 
     describe('settings.folder[].includeSubFolders === true', function () {
       let addedPushFolder;
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
 
       beforeEach(function () {
         // create push folder
@@ -1022,26 +865,65 @@ describe('StudioHelper', function() {
           }]
         });
 
+        console.log(res.data);
+
         // The touched file should be updated
         console.log.calledWithMatch(/\[Studio\] Updated: (.)*subfolder1\/subsubfolder1\/file1\.js/).should.equal(true);
         return res.should.have.lengthOf(1);
       });
+    });
 
+    describe('Response [].data', function () {
+      let addedPushFolder;
 
-      after(function () {
-        // clean up folder
-        return studio.deleteFolder(addedPushFolder).then(function (res) {
+      beforeEach(function () {
+        // create push folder
+        return studio.createFolder({
+          'parentId': mainFolder,
+          'name': 'push-includeChildFolders'
+        }).then(function (res) {
+          addedPushFolder = res.result.id;
           return res.status.should.equal('ok');
+        });
+      });
+
+      describe('Response [].data.remoteOnlyFiles', function () {
+        it('should include information about files only files on the remote', async function () {
+          let res = await studio.push({
+            'folders': [{
+              'folderId': addedPushFolder,
+              'localFolder': getFolder('remoteOnlyFiles/original'),
+              'includeSubFolders': true
+            }]
+          });
+
+          res.should.have.lengthOf(3);
+          const originalUuids = res.map(item => item.result.createdFileId);
+
+          res = await studio.push({
+            'folders': [{
+              'folderId': addedPushFolder,
+              'localFolder': getFolder('remoteOnlyFiles/changed'),
+              'includeSubFolders': true,
+              'createNewFileVersions': false
+            }]
+          });
+
+          // Should upload new files and add remote only files to `res.data.remoteOnlyFiles`
+          res.should.have.lengthOf(2);
+          res.data.remoteOnlyFiles.should.have.lengthOf(2);
+          res.data.remoteOnlyFiles.forEach(file => {
+            originalUuids.should.containEql(file.id);
+            file.should.have.property('name').which.is.a.String();
+            file.should.have.property('localFolder').which.is.a.String();
+            file.should.have.property('folderId').which.is.a.String();
+          });
         });
       });
     });
 
     describe('settings.folder[].createdFileHeaders', function () {
       let addedPushFolder;
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
 
       beforeEach(function () {
         // create push folder
@@ -1088,22 +970,10 @@ describe('StudioHelper', function() {
           return res.should.have.lengthOf(3);
         })
       });
-
-      after(function () {
-        // clean up folder
-        return studio.deleteFolder(addedPushFolder).then(function (res) {
-          return res.status.should.equal('ok');
-        });
-      });
-    })
+    });
   })
 
   describe('#deleteFiles', function () {
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
-
     before(function () {
       let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
 
@@ -1115,11 +985,6 @@ describe('StudioHelper', function() {
     })
 
     it('should delete files', function () {
-      let studio = new StudioHelper({
-        'studio': studioHost,
-        'strictSSL': strictSSL
-      });
-
       return studio.getFiles(mainFolder).then(function (files) {
         let fileIds = [];
 
@@ -1136,12 +1001,6 @@ describe('StudioHelper', function() {
   });
 
   describe('Prompt test', function () {
-    //let addedTestFolder;
-    let studio = new StudioHelper({
-      'studio': studioHost,
-      'strictSSL': strictSSL
-    });
-
     it('only one prompt should be shown', function () {
       console.log.reset();
 
