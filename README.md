@@ -33,7 +33,7 @@
     * [.createDirectoryFolders(folderData)](#StudioHelper+createDirectoryFolders) ⇒ [<code>Array.&lt;ResultObj&gt;</code>](#ResultObj)
     * [.getLocalFolders(path)](#StudioHelper+getLocalFolders) ⇒ <code>Array.&lt;string&gt;</code>
     * [.getFiles(folderId)](#StudioHelper+getFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
-    * [.deleteFiles(files)](#StudioHelper+deleteFiles) ⇒ <code>Promise.&lt;Object&gt;</code>
+    * [.deleteFiles(files, options)](#StudioHelper+deleteFiles) ⇒ <code>Promise.&lt;Object&gt;</code>
     * [.uploadFiles(files, folderId)](#StudioHelper+uploadFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
     * [.replaceFiles(files, [options])](#StudioHelper+replaceFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
     * [.getFileHeaders(fileId)](#StudioHelper+getFileHeaders) ⇒ [<code>ResultObj</code>](#ResultObj)
@@ -178,14 +178,16 @@ Get files of a folder
 
 <a name="StudioHelper+deleteFiles"></a>
 
-### studioHelper.deleteFiles(files) ⇒ <code>Promise.&lt;Object&gt;</code>
+### studioHelper.deleteFiles(files, options) ⇒ <code>Promise.&lt;Object&gt;</code>
 Delete files
 
 **Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| files | <code>Array.&lt;string&gt;</code> | Array of file ids |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| files | <code>Array.&lt;string&gt;</code> |  | Array of file ids |
+| options | <code>Object</code> |  |  |
+| [options.throttle] | <code>number</code> | <code>1</code> | Number of concurrent delete file requests. Max 5 |
 
 <a name="StudioHelper+uploadFiles"></a>
 
