@@ -995,16 +995,30 @@ class StudioHelper {
    * Delete files
    *
    * @param {Array<string>} files - Array of file ids
+   * @param {Object} options
+   * @param {number} [options.throttle=1] - Number of concurrent delete file requests. Max 5
    * @return {Promise<Object>}
    **/
-  deleteFiles(files) {
-    let self = this;
+  deleteFiles(files, options = {}) {
+    const defaults = {
+      'throttle': 1
+    };
 
-    return Promise.resolve(files).mapSeries(function(file) {
-      //return self._delete('file', file);
-      return self._delete('file', file);
+    const settings = Object.assign(defaults, options);
+
+    // Max 5 concurrent delete operations
+    if (settings.throttle > 5) {
+      settings.throttle = 5;
+    }
+
+    const chunkThroat = throat(settings.throttle);
+
+    return Promise.resolve(files).map(file => {
+      return chunkThroat(() => {
+        return this._delete('file', file);
+      });
     }).then(function (res) {
-      let resArr = res;
+      const resArr = res;
 
       // Check that all delete actions are ok
       for (let i=0, l=resArr.length; i<l; i++) {
@@ -1017,11 +1031,11 @@ class StudioHelper {
         }
       }
 
-      return Promise.resolve({
+      return {
         'status': 'ok',
         'result': true,
         'code': 0
-      });
+      };
     });
   }
 
@@ -1334,6 +1348,17 @@ class StudioHelper {
     return replaceReadyFiles;
   }
 
+  /**
+   * @private
+   *
+   * @param {Object[]} studioFiles
+   * @param {string[]} localFiles
+   * @param {string} dirPath
+   * @param {string} studioFolderId
+   * @param {Object} options
+   * @param {boolean} [options.createNewVersion=true]
+   * @param {Object} [options.createdFileHeaders]
+   */
   getChangedFiles(studioFiles, localFiles, dirPath, studioFolderId, options = {}) {
     let self = this;
 

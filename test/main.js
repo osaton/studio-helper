@@ -974,7 +974,7 @@ describe('StudioHelper', function() {
   })
 
   describe('#deleteFiles', function () {
-    before(function () {
+    beforeEach(function () {
       let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
 
       return studio.uploadFiles(files, mainFolder).then(function (res) {
@@ -992,8 +992,23 @@ describe('StudioHelper', function() {
           fileIds.push(files[i].id);
         }
 
-        fileIds.length.should.be.above(0);
+        fileIds.length.should.be.above(1);
         return studio.deleteFiles(fileIds).then(function (res) {
+          return res.result.should.equal(true);
+        });
+      });
+    });
+
+    it('should delete files when throttle option is used', function () {
+      return studio.getFiles(mainFolder).then(function (files) {
+        let fileIds = [];
+
+        for (let i=0, l=files.length; i<l; i++) {
+          fileIds.push(files[i].id);
+        }
+
+        fileIds.length.should.be.above(1);
+        return studio.deleteFiles(fileIds,{ 'throttle': 5 }).then(function (res) {
           return res.result.should.equal(true);
         });
       });
