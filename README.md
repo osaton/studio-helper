@@ -91,7 +91,7 @@ Login
 Push changes to Studio
 
 **Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
-**Returns**: <code>Array.&lt;Object&gt;</code> - Array of objects with file upload information  
+**Returns**: <code>Array.&lt;Object&gt;</code> - Array of objects with file upload information. Array has `data` property which contains additional information.  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |

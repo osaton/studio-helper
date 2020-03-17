@@ -810,7 +810,7 @@ class StudioHelper {
    * @param {boolean} [settings.folders[].includeSubFolders=false] - Create and upload sub folders
    * @param {Object} [settings.folders[].createdFolderSettings=null] - Object with paths (RegEx pattern) as keys and FolderUpdateSettings object as value. See example.
    * @param {Object} [settings.folders[].createdFileHeaders=null] - Object with file paths (RegEx pattern) as keys and FileHeaderSettings objcet as value. See example.
-   * @return {Array<Object>} Array of objects with file upload information
+   * @return {Array<Object>} Array of objects with file upload information. Array has `data` property which contains additional information.
    */
   push(settings) {
     let self = this;
@@ -1740,6 +1740,9 @@ class StudioHelper {
     this.proxy = proxy;
   }
 
+  /**
+   * @private
+   */
   uploadFilesInFolders(folders) {
     let self = this,
         foldersData = [];
