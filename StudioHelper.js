@@ -462,8 +462,18 @@ class StudioHelper {
     return Promise.reject(results);
   }
 
-  _showProgressBar(fileName, dataLength) {
+  _showProgressBar(title, total, options = {}) {
     let columns = process.stdout.columns || 100
+
+    const defaults = {
+      'complete': '=',
+      'incomplete': ' ',
+      'width': 20,
+      'clear': true,
+      'total': total
+    }
+
+    const settings = Object.assign(defaults, options);
 
     // Workaround for non TTY context
     if (!process.stderr.cursorTo) {
@@ -481,13 +491,7 @@ class StudioHelper {
       };
     }
 
-    return new ProgressBar('[Studio] Uploading ' + fileName + ' [:bar] :percent', {
-      'complete': '=',
-      'incomplete': ' ',
-      'width': 20,
-      'clear': true,
-      'total': dataLength
-    });
+    return new ProgressBar(`[Studio] ${title}`, settings);
   }
 
 
@@ -517,7 +521,7 @@ class StudioHelper {
     let bar;
 
     if (chunks.length) {
-      bar = this._showProgressBar(fileName, fileData.length);
+      bar = this._showProgressBar('Uploading ' + fileName + ' [:bar] :percent', fileData.length);
     }
 
     return Promise.resolve(chunks).map(function(data) {
@@ -555,7 +559,7 @@ class StudioHelper {
     let bar;
 
     if (chunks.length) {
-      bar = this._showProgressBar(fileName, fileData.length);
+      bar = this._showProgressBar('Uploading ' + fileName + ' [:bar] :percent', fileData.length);
     }
 
     return Promise.resolve(chunks).map(function(data) {
@@ -997,11 +1001,14 @@ class StudioHelper {
    * @param {Array<string>} files - Array of file ids
    * @param {Object} options
    * @param {number} [options.throttle=1] - Number of concurrent delete file requests. Max 5
+   * @param {number} [options.showProgress=false] - Number of concurrent delete file requests. Max 5
    * @return {Promise<Object>}
    **/
   deleteFiles(files, options = {}) {
     const defaults = {
-      'throttle': 1
+      'throttle': 1,
+      'showProgress': false,
+      'progressOptions': null
     };
 
     const settings = Object.assign(defaults, options);
@@ -1011,11 +1018,22 @@ class StudioHelper {
       settings.throttle = 5;
     }
 
+    let bar;
+    if (settings.showProgress) {
+      bar = this._showProgressBar(`Deleting ${files.length} files [:bar] :percent`, files.length, settings.progressOptions);
+    }
+
     const chunkThroat = throat(settings.throttle);
 
     return Promise.resolve(files).map(file => {
       return chunkThroat(() => {
-        return this._delete('file', file);
+        return this._delete('file', file).then(res => {
+          if (bar) {
+            bar.tick(1);
+          }
+
+          return res;
+        })
       });
     }).then(function (res) {
       const resArr = res;

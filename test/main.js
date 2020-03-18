@@ -1013,6 +1013,21 @@ describe('StudioHelper', function() {
         });
       });
     });
+
+    it('should work with progress bar enabled', function () {
+      return studio.getFiles(mainFolder).then(function (files) {
+        let fileIds = [];
+
+        for (let i=0, l=files.length; i<l; i++) {
+          fileIds.push(files[i].id);
+        }
+
+        fileIds.length.should.be.above(1);
+        return studio.deleteFiles(fileIds,{ 'throttle': 1, 'showProgress': true }).then(function (res) {
+          return res.result.should.equal(true);
+        });
+      });
+    });
   });
 
   describe('Prompt test', function () {
