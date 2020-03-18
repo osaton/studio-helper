@@ -10,6 +10,8 @@
 <dl>
 <dt><a href="#ResultObj">ResultObj</a> : <code>Object</code></dt>
 <dd></dd>
+<dt><a href="#ProgressOptions">ProgressOptions</a></dt>
+<dd></dd>
 <dt><a href="#FileHeaderSettings">FileHeaderSettings</a> : <code>Object</code></dt>
 <dd><p>Key / value pairs of wanted header names and their values</p>
 </dd>
@@ -188,6 +190,8 @@ Delete files
 | files | <code>Array.&lt;string&gt;</code> |  | Array of file ids |
 | options | <code>Object</code> |  |  |
 | [options.throttle] | <code>number</code> | <code>1</code> | Number of concurrent delete file requests. Max 5 |
+| [options.showProgress] | <code>number</code> | <code>false</code> | Number of concurrent delete file requests. Max 5 |
+| [options.progressOptions] | [<code>ProgressOptions</code>](#ProgressOptions) |  | Progress bar options |
 
 <a name="StudioHelper+uploadFiles"></a>
 
@@ -371,6 +375,27 @@ Batch upload/replace files
 | status | <code>string</code> | "ok" or "error" |
 | code | <code>number</code> | 0 for success |
 | result | <code>string</code> \| <code>Object</code> \| <code>Array</code> \| <code>boolean</code> | Results |
+
+<a name="ProgressOptions"></a>
+
+## ProgressOptions
+**Kind**: global typedef  
+
+| Param | Type |
+| --- | --- |
+| title | <code>string</code> | 
+| total | <code>number</code> | 
+| options | [<code>ProgressOptions</code>](#ProgressOptions) | 
+
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| complete | <code>string</code> | 
+| incomplete | <code>string</code> | 
+| width | <code>number</code> | 
+| clear | <code>boolean</code> | 
+| total | <code>number</code> | 
 
 <a name="FileHeaderSettings"></a>
 

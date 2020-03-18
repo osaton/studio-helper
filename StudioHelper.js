@@ -462,6 +462,18 @@ class StudioHelper {
     return Promise.reject(results);
   }
 
+  /**
+   * @typedef ProgressOptions
+   * @property {string} complete
+   * @property {string} incomplete
+   * @property {number} width
+   * @property {boolean} clear
+   * @property {number} total
+   *
+   * @param {string} title
+   * @param {number} total
+   * @param {ProgressOptions} options
+   */
   _showProgressBar(title, total, options = {}) {
     let columns = process.stdout.columns || 100
 
@@ -1002,6 +1014,7 @@ class StudioHelper {
    * @param {Object} options
    * @param {number} [options.throttle=1] - Number of concurrent delete file requests. Max 5
    * @param {number} [options.showProgress=false] - Number of concurrent delete file requests. Max 5
+   * @param {ProgressOptions} [options.progressOptions] - Progress bar options
    * @return {Promise<Object>}
    **/
   deleteFiles(files, options = {}) {
