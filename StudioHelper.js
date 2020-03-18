@@ -1033,7 +1033,7 @@ class StudioHelper {
 
     let bar;
     if (settings.showProgress) {
-      bar = this._showProgressBar(`Deleting ${files.length} files [:bar] :percent`, files.length, settings.progressOptions);
+      bar = this._showProgressBar(`Deleting ${files.length} file(s) [:bar] :percent`, files.length, settings.progressOptions);
     }
 
     const chunkThroat = throat(settings.throttle);
