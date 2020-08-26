@@ -294,7 +294,7 @@ class StudioHelper {
 
     options.url = this.apiUrl + action;
 
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       return request.post(options, function(error, response, body) {
         if (body && passAPIResponseHandling) {
           resolve(JSON.parse(body));
@@ -303,7 +303,7 @@ class StudioHelper {
         return self._handleAPIResponse(error, body, self._post, action, postData, customOptions).then(function(res) {
           resolve(res);
         }).catch(function(res) {
-          self._log(res.result);
+          reject(res);
         });
       }).form(postData);
     });
@@ -330,14 +330,14 @@ class StudioHelper {
 
     options.url = this.apiUrl + action;
 
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       request.put(options, function(error, response, body) {
         //let data = JSON.parse(body);
 
         return self._handleAPIResponse(error, body, self._put, action, data).then(function(res) {
           resolve(res);
         }).catch(function(res) {
-          self._log(res.result);
+          reject(res);
         });
       });
     });
@@ -368,13 +368,13 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve,reject) {
       request.get(options, function(error, response, body) {
         allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
         }).catch(function(res) {
-          self._log(res.result);
+          reject(res);
         });
       });
     });
@@ -404,13 +404,13 @@ class StudioHelper {
 
     options.url = this.apiUrl + action + '/' + args.join('/');
 
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       request.delete(options, function(error, response, body) {
         allArguments.unshift(error, body, self._get);
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
         }).catch(function(res) {
-          self._log(res.result);
+          reject(res);
         });
       });
     });
