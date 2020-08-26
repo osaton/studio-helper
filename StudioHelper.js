@@ -16,7 +16,8 @@ const request = require('request'),
 
 const API_URL = '/studioapi/v2/',
       CHUNK_SIZE = 4000000,
-      MAX_CONCURRENT_CONNECTIONS = 1,
+      MAX_CONCURRENT_UPLOADS = 5,
+      MAX_CONCURRENT_CHUNK_CONNECTIONS = 1,
       CREDENTIALS_FILE = '.studio-credentials',
       CREDENTIALS_SECRET_BASE = 'not/that/secret/by/itself/!:(',
       IGNORE_FILE = '.studio-ignore',
@@ -48,6 +49,7 @@ class StudioHelper {
    * @param {boolean} [settings.loginPromptEnabled=true] - Show login prompt if authentication fails
    * @param {string}  [settings.credentialsFile=.studio-credentials] - File in which credentials are saved
    * @param {boolean} [settings.useCacheDir=false] - Store credentials file in Node modules cache dir
+   * @param {number}  [settings.concurrentUploads=1] - Max concurrent uploads when using batch methods. Defaul 1, Max 5.
    * @param {string}  [settings.ignoreFile=.studio-ignore] - Utilised by [push]{@link StudioHelper#push} method. Uses gitignore {@link https://git-scm.com/docs/gitignore|spec}
    */
   constructor(settings) {
@@ -131,6 +133,12 @@ class StudioHelper {
       this.loginPromptEnabled = settings.loginPromptEnabled;
     } else {
       this.loginPromptEnabled = true;
+    }
+
+    this.concurrentUploads = settings.concurrentUploads || 1;
+
+    if (this.concurrentUploads > MAX_CONCURRENT_UPLOADS) {
+      this.concurrentUploads = MAX_CONCURRENT_UPLOADS;
     }
   }
 
@@ -529,7 +537,7 @@ class StudioHelper {
   _replaceFileChunks(folderId, uploadToken, fileData, fileName) {
     let self = this;
     let chunks = this._splitData(fileData);
-    let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
+    let chunkThroat = throat(MAX_CONCURRENT_CHUNK_CONNECTIONS);
     let bar;
 
     if (chunks.length) {
@@ -567,7 +575,7 @@ class StudioHelper {
   _uploadFileChunks(folderId, uploadToken, fileData, fileName) {
     let self = this;
     let chunks = this._splitData(fileData);
-    let chunkThroat = throat(MAX_CONCURRENT_CONNECTIONS);
+    let chunkThroat = throat(MAX_CONCURRENT_CHUNK_CONNECTIONS);
     let bar;
 
     if (chunks.length) {
@@ -1722,23 +1730,23 @@ class StudioHelper {
    */
 
   batchUpload(files) {
-    let self = this;
+    const throttle = throat(this.concurrentUploads);
 
-    let processAll = Promise.resolve(files).mapSeries(function(file) {
-      const options = {
-        'headers': file.headers
-      };
+    return Promise.resolve(files).map(file => {
+      return throttle(() => {
+        const options = {
+          'headers': file.headers
+        };
 
-      switch (file.action) {
-        case 'upload':
-          return self.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder, options);
-        case 'replace':
-          options.createNewVersion = file.createNewVersion;
-          return self.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder, options);
-      }
+        switch (file.action) {
+          case 'upload':
+            return this.uploadFile(file.folderId, file.name, file.type, file.size, file.sha1, file.data, file.localFolder, options);
+          case 'replace':
+            options.createNewVersion = file.createNewVersion;
+            return this.replaceFile(file.id, file.type, file.size, file.sha1, file.data, file.name, file.localFolder, options);
+        }
+      });
     });
-
-    return processAll;
   }
 
   /**

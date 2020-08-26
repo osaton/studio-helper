@@ -5,9 +5,12 @@ const should = require('should'),
       path = require('path'),
       fs = require('fs'),
       Promise = require('bluebird'),
+      //mainParentFolder = '5e7228ae454fd95ba6219203',
+      //studioHost = 'dev75.studio.dev75.intra',
+      //strictSSL = false;
       mainParentFolder = '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
       studioHost = 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
-      strictSSL = true; // Change to false if using self-signed certificate
+      strictSSL = true; // Change to false if using self-signed certificate*/
 
 require('mocha-sinon');
 
@@ -37,7 +40,8 @@ describe('StudioHelper', function() {
   before(async function () {
     studio = new StudioHelper({
       'studio': studioHost,
-      'strictSSL': strictSSL
+      'strictSSL': strictSSL,
+      'concurrentUploads': 5
     });
 
     let res = await studio.deleteChildFolders(mainParentFolder);
@@ -312,10 +316,10 @@ describe('StudioHelper', function() {
     });
 
     it('should upload files to specific folder', function () {
-      let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
+      let files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js'), path.join(getFolder('folders/testfolder2'), 'test.gif')];
 
       return studio.uploadFiles(files, uploadFilesFolderId).then(function (res) {
-        res.should.have.lengthOf(2);
+        res.should.have.lengthOf(3);
         res[0].status.should.equal('ok');
         return res[1].status.should.equal('ok');
       });

@@ -63,6 +63,7 @@
 | [settings.loginPromptEnabled] | <code>boolean</code> | <code>true</code> | Show login prompt if authentication fails |
 | [settings.credentialsFile] | <code>string</code> | <code>&quot;.studio-credentials&quot;</code> | File in which credentials are saved |
 | [settings.useCacheDir] | <code>boolean</code> | <code>false</code> | Store credentials file in Node modules cache dir |
+| [settings.concurrentUploads] | <code>number</code> | <code>1</code> | Max concurrent uploads when using batch methods. Defaul 1, Max 5. |
 | [settings.ignoreFile] | <code>string</code> | <code>&quot;.studio-ignore&quot;</code> | Utilised by [push](#StudioHelper+push) method. Uses gitignore [spec](https://git-scm.com/docs/gitignore) |
 
 **Example**  
