@@ -28,6 +28,7 @@
     "throat": "^3.0.0"
   },
   "devDependencies": {
+    "dotenv": "^10.0.0",
     "eslint": "^6.0.1",
     "jsdoc-to-markdown": "^5.0.0",
     "mocha": "^6.1.4",

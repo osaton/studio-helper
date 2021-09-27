@@ -1,16 +1,14 @@
 'use strict';
 /*eslint max-nested-callbacks: ["error", 10]*/
+require('dotenv').config();
 const should = require('should'),
       StudioHelper = require('../StudioHelper'),
       path = require('path'),
       fs = require('fs'),
       Promise = require('bluebird'),
-      //mainParentFolder = '5e7228ae454fd95ba6219203',
-      //studioHost = 'dev75.studio.dev75.intra',
-      //strictSSL = false;
-      mainParentFolder = '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
-      studioHost = 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
-      strictSSL = true; // Change to false if using self-signed certificate*/
+      mainParentFolder = process.env.TEST_FOLDER || '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
+      studioHost = process.env.TEST_STUDIO_HOST || 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
+      strictSSL = process.env.TEST_STRICT_SSL || true; // Change to false if using self-signed certificate*/
 
 require('mocha-sinon');
 
