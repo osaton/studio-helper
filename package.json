@@ -17,6 +17,7 @@
   ],
   "author": "Petteri",
   "dependencies": {
+    "debug": "^4.3.2",
     "bluebird": "^3.4.5",
     "find-cache-dir": "^3.3.0",
     "ignore": "^3.1.5",

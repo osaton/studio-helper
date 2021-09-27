@@ -10,7 +10,8 @@ const request = require('request'),
       ignore = require('ignore'),
       throat = require('throat')(Promise),
       ProgressBar = require('progress'),
-      findCacheDir = require('find-cache-dir');
+      findCacheDir = require('find-cache-dir'),
+      debugApiErrors = require('debug')('studio-helper:api-error');
 
 //Promise.longStackTraces();
 
@@ -303,6 +304,7 @@ class StudioHelper {
         return self._handleAPIResponse(error, body, self._post, action, postData, customOptions).then(function(res) {
           resolve(res);
         }).catch(function(res) {
+          debugApiErrors('_post', options, res);
           reject(res);
         });
       }).form(postData);
@@ -337,6 +339,7 @@ class StudioHelper {
         return self._handleAPIResponse(error, body, self._put, action, data).then(function(res) {
           resolve(res);
         }).catch(function(res) {
+          debugApiErrors('_put', options, res);
           reject(res);
         });
       });
@@ -374,6 +377,7 @@ class StudioHelper {
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
         }).catch(function(res) {
+          debugApiErrors('_get', options, res);
           reject(res);
         });
       });
@@ -410,6 +414,7 @@ class StudioHelper {
         return self._handleAPIResponse.apply(self, allArguments).then(function(res) {
           resolve(res);
         }).catch(function(res) {
+          debugApiErrors('_delete', options, res);
           reject(res);
         });
       });
