@@ -193,8 +193,10 @@ describe('StudioHelper', function() {
         res.result.fileCacheProtected.should.be.type('boolean');
         res.result.apiFolder.should.be.type('boolean');
         res.result.noversioning.should.be.type('boolean');*/
-        originalSettings.fileCacheMaxAge.should.equal('0');
-        originalSettings.fileCacheProtected.should.equal('0');
+        // Don't enable strict comparison as API might return string or number (0, '0' etc.)
+        // eslint-disable-next-line
+        originalSettings.fileCacheMaxAge.should.equal(originalSettings.fileCacheMaxAge == 0 ? 0 : 1);
+        originalSettings.fileCacheProtected.should.equal(false);
         originalSettings.apiFolder.should.equal(false);
         originalSettings.noversioning.should.equal(false);
 
