@@ -8,7 +8,7 @@ const should = require('should'),
       Promise = require('bluebird'),
       mainParentFolder = process.env.TEST_FOLDER || '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
       studioHost = process.env.TEST_STUDIO_HOST || 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
-      strictSSL = process.env.TEST_STRICT_SSL || true; // Change to false if using self-signed certificate*/
+      strictSSL = process.env.TEST_STRICT_SSL === '0' ? false : true // Change to false if using self-signed certificate*/
 
 require('mocha-sinon');
 
@@ -610,19 +610,20 @@ describe('StudioHelper', function() {
   describe('#push', function () {
     describe('settings.folder[].includeSubFolders === false', function () {
       let testFolder1, testFolder2;
-
+      let counter = 0;
       beforeEach(function () {
         // create push folder
         return studio.createFolder({
           'parentId': mainFolder,
-          'name': 'push-testFolder1'
+          'name': `push-testFolder-${counter}`
         }).then(function (res) {
           testFolder1 = res.result.id;
           res.status.should.equal('ok');
           return studio.createFolder({
             'parentId': mainFolder,
-            'name': 'push-testFolder2'
+            'name': `push-testFolder2-${counter}`
           }).then(function (res) {
+            counter++;
             testFolder2 = res.result.id;
             return res.status.should.equal('ok');
           });
@@ -663,13 +664,14 @@ describe('StudioHelper', function() {
 
     describe('settings.folder[].includeSubFolders === true', function () {
       let addedPushFolder;
-
+      let counter = 0;
       beforeEach(function () {
         // create push folder
         return studio.createFolder({
           'parentId': mainFolder,
-          'name': 'push-includeChildFolders'
+          'name': `push-includeChildFolders1-${counter}`
         }).then(function (res) {
+          counter++;
           addedPushFolder = res.result.id;
           return res.status.should.equal('ok');
         });
@@ -879,12 +881,12 @@ describe('StudioHelper', function() {
 
     describe('Response [].data', function () {
       let addedPushFolder;
-
+      let counter = 0;
       beforeEach(function () {
         // create push folder
         return studio.createFolder({
           'parentId': mainFolder,
-          'name': 'push-includeChildFolders'
+          'name': `push-includeChildFolders2-${counter}`
         }).then(function (res) {
           addedPushFolder = res.result.id;
           return res.status.should.equal('ok');
@@ -928,12 +930,12 @@ describe('StudioHelper', function() {
 
     describe('settings.folder[].createdFileHeaders', function () {
       let addedPushFolder;
-
+      let counter = 0;
       beforeEach(function () {
         // create push folder
         return studio.createFolder({
           'parentId': mainFolder,
-          'name': 'push-includeChildFolders'
+          'name': `push-includeChildFolders3-${counter}`
         }).then(function (res) {
           addedPushFolder = res.result.id;
           return res.status.should.equal('ok');
