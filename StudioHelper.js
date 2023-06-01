@@ -85,7 +85,19 @@ class StudioHelper {
       this.credentialsFile = CREDENTIALS_FILE;
     }
 
-    if (settings.useCacheDir) {
+    if (typeof settings.loginPromptEnabled === 'boolean') {
+      this.loginPromptEnabled = settings.loginPromptEnabled;
+    } else {
+      this.loginPromptEnabled = true;
+    }
+
+
+    // When used programmatically the credentials file is not needed
+    if (this.loginPromptEnabled === false) {
+      this.credentialsFile = null;
+    }
+
+    if (settings.useCacheDir && this.credentialsFile) {
       const thunk = findCacheDir({ 'name': 'studio-helper', 'thunk': true })
       this.credentialsFile = thunk(this.credentialsFile);
       this.credentialsDir = thunk();
@@ -108,7 +120,7 @@ class StudioHelper {
         'message': 'Username',
         'type': 'input',
         'name': 'name',
-        'default': this.credentials && this.credentials.username || ''
+        'default': this.credentials && this.credentials.username || ''
       }, {
         'message': 'Password',
         'type': 'password',
@@ -130,11 +142,7 @@ class StudioHelper {
       this._addToIgnore(this.ignoreFile);
     }
 
-    if (settings.loginPromptEnabled) {
-      this.loginPromptEnabled = settings.loginPromptEnabled;
-    } else {
-      this.loginPromptEnabled = true;
-    }
+
 
     this.concurrentUploads = settings.concurrentUploads || 1;
 
@@ -203,6 +211,10 @@ class StudioHelper {
   _getCredentials() {
     let data = null;
     let dataString = null;
+
+    if (!this.credentialsFile) {
+      return null;
+    }
 
     try {
       dataString = fs.readFileSync(this.credentialsFile, 'utf8');
