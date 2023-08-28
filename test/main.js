@@ -23,6 +23,10 @@ const touch = function (filePath) {
 }
 
 
+const sleep = async function (time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
 
 describe('StudioHelper', function() {
   this.timeout(0);
@@ -1003,6 +1007,46 @@ describe('StudioHelper', function() {
       });
     });
   })
+
+  describe('#getFiles', function () {
+    before(async () => {
+      const files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
+
+      const res = await studio.uploadFiles(files, mainFolder);
+      res.should.have.lengthOf(2);
+      res[0].status.should.equal('ok');
+      res[1].status.should.equal('ok');
+    });
+
+    afterEach(async () => {
+      await studio.resetAPISettings();
+    });
+
+    it('should get files', async () => {
+      const res = await studio.getFiles(mainFolder);
+      res.should.have.lengthOf(2);
+      res[0].should.have.property('details');
+      res[0].details.should.have.property('sha1');
+    });
+
+    it('should get files with extra information with updated session settings', async () => {
+      await studio.updateAPISetting('externalURL', 1);
+      await studio.updateAPISetting('conversions', 1);
+
+      // Give some time for first conversions to be created
+      await sleep(1000);
+
+      const res = await studio.getFiles(mainFolder);
+
+      res.should.have.lengthOf(2);
+      res[0].should.have.property('details');
+      res[0].should.have.property('externalURL').which.is.a.String();
+      res[0].should.have.property('conversions').which.is.an.Array();
+
+      res[0].conversions[0].should.have.property('quicktag').which.is.a.String();
+      res[0].conversions[0].should.have.property('externalURL').which.is.a.String();
+    });
+  });
 
   describe('#deleteFiles', function () {
     beforeEach(function () {
