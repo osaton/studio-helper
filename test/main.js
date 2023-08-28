@@ -8,7 +8,8 @@ const should = require('should'),
       Promise = require('bluebird'),
       mainParentFolder = process.env.TEST_FOLDER || '57fd20b96c6e79438855b47f', // Replace folder id if you're not using helper Studio for testing
       studioHost = process.env.TEST_STUDIO_HOST || 'helper.studio.crasman.fi', // Replace host if you're not using helper Studio for testing
-      strictSSL = process.env.TEST_STRICT_SSL === '0' ? false : true // Change to false if using self-signed certificate*/
+      strictSSL = process.env.TEST_STRICT_SSL === '0' ? false : true, // Change to false if using self-signed certificate*/
+      proxy = process.env.TEST_PROXY_ENABLED === '1' ? 'http://proxy.intra:8080/' : '';
 
 require('mocha-sinon');
 
@@ -39,7 +40,8 @@ describe('StudioHelper', function() {
     studio = new StudioHelper({
       'studio': studioHost,
       'strictSSL': strictSSL,
-      'concurrentUploads': 5
+      'concurrentUploads': 5,
+      'proxy': proxy
     });
 
     let res = await studio.deleteChildFolders(mainParentFolder);
@@ -66,7 +68,8 @@ describe('StudioHelper', function() {
     it('should initialize', function () {
       let studio = new StudioHelper({
         'studio': studioHost,
-        'strictSSL': strictSSL
+        'strictSSL': strictSSL,
+        'proxy': proxy
       });
 
       should(studio).be.an.instanceOf(StudioHelper);
@@ -76,7 +79,8 @@ describe('StudioHelper', function() {
       let studio = new StudioHelper({
         'studio': studioHost,
         'strictSSL': strictSSL,
-        'useCacheDir': true
+        'useCacheDir': true,
+        'proxy': proxy
       });
 
       should(studio).be.an.instanceOf(StudioHelper);
@@ -95,7 +99,8 @@ describe('StudioHelper', function() {
         let studio = new StudioHelper({
           'studio': studioHost,
           'strictSSL': strictSSL,
-          'useCacheDir': true
+          'useCacheDir': true,
+          'proxy': proxy
         });
 
         const res = studio._updateCredentials({ 'test': 'yes2' });
@@ -106,7 +111,8 @@ describe('StudioHelper', function() {
         let studio = new StudioHelper({
           'studio': studioHost,
           'strictSSL': strictSSL,
-          'useCacheDir': true
+          'useCacheDir': true,
+          'proxy': proxy
         });
 
         let res = studio._updateCredentials({ 'test': 'yes2' });
