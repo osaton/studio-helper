@@ -127,21 +127,21 @@ describe('StudioHelper', function() {
     })
   });
 
-  describe('#resetAPISettings', function () {
+  describe('#resetSessionSettings', function () {
     it('should reset API settings', async function () {
-      const res = await studio.resetAPISettings();
+      const res = await studio.resetSessionSettings();
       res.status.should.equal('ok');
     });
   });
 
-  describe('#updateAPISetting', function () {
+  describe('#updateSessionSetting', function () {
     after(async () => {
-      const res = await studio.resetAPISettings();
+      const res = await studio.resetSessionSettings();
       res.status.should.equal('ok');
     });
 
     it('should update API settings', async () =>  {
-      const res = await studio.updateAPISetting('pubURL', 1);
+      const res = await studio.updateSessionSetting('pubURL', 1);
       res.status.should.equal('ok');
     });
   });
@@ -1019,7 +1019,7 @@ describe('StudioHelper', function() {
     });
 
     afterEach(async () => {
-      await studio.resetAPISettings();
+      await studio.resetSessionSettings();
     });
 
     it('should get files', async () => {
@@ -1030,8 +1030,8 @@ describe('StudioHelper', function() {
     });
 
     it('should get files with extra information with updated session settings', async () => {
-      await studio.updateAPISetting('externalURL', 1);
-      await studio.updateAPISetting('conversions', 1);
+      await studio.updateSessionSetting('externalURL', 1);
+      await studio.updateSessionSetting('conversions', 1);
 
       // Give some time for first conversions to be created
       await sleep(1000);

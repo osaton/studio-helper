@@ -28,27 +28,37 @@
 ## StudioHelper
 **Kind**: global class  
 
-* [StudioHelper](#StudioHelper)
-    * [new StudioHelper(settings)](#new_StudioHelper_new)
-    * [.login(username, password, token, [longSession])](#StudioHelper+login) ⇒ <code>Promise</code>
-    * [.push(settings)](#StudioHelper+push) ⇒ <code>Array.&lt;Object&gt;</code>
-    * [.createDirectoryFolders(folderData)](#StudioHelper+createDirectoryFolders) ⇒ [<code>Array.&lt;ResultObj&gt;</code>](#ResultObj)
-    * [.getLocalFolders(path)](#StudioHelper+getLocalFolders) ⇒ <code>Array.&lt;string&gt;</code>
-    * [.getFiles(folderId)](#StudioHelper+getFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
-    * [.deleteFiles(files, options)](#StudioHelper+deleteFiles) ⇒ <code>Promise.&lt;Object&gt;</code>
-    * [.uploadFiles(files, folderId)](#StudioHelper+uploadFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
-    * [.replaceFiles(files, [options])](#StudioHelper+replaceFiles) ⇒ <code>Promise.&lt;Array.&lt;Object&gt;&gt;</code>
-    * [.getFileHeaders(fileId)](#StudioHelper+getFileHeaders) ⇒ [<code>ResultObj</code>](#ResultObj)
-    * [.setFileHeaders(fileId, headerSettings, [options])](#StudioHelper+setFileHeaders) ⇒ [<code>ResultObj</code>](#ResultObj)
-    * [.getUploadInformation(files, folderId)](#StudioHelper+getUploadInformation) ⇒ <code>Array.&lt;Object&gt;</code>
-    * [.getReplaceInformation(files, options)](#StudioHelper+getReplaceInformation)
-    * [.getFolders([parentId])](#StudioHelper+getFolders) ⇒ <code>Promise.&lt;Object&gt;</code>
-    * [.createFolder(settings)](#StudioHelper+createFolder) ⇒ [<code>ResultObj</code>](#ResultObj)
-    * [.deleteFolder(folderId)](#StudioHelper+deleteFolder) ⇒ <code>Promise.&lt;Object&gt;</code>
-    * [.deleteChildFolders(folderId)](#StudioHelper+deleteChildFolders) ⇒ <code>Promise.&lt;Object&gt;</code>
-    * [.getFolderSettings(folderId)](#StudioHelper+getFolderSettings) ⇒ [<code>ResultObj</code>](#ResultObj)
-    * [.updateFolderSettings(folderId, folderSettings, [options])](#StudioHelper+updateFolderSettings) ⇒ [<code>ResultObj</code>](#ResultObj)
-    * [.batchUpload(files)](#StudioHelper+batchUpload) ⇒ <code>Array.&lt;object&gt;</code>
+- [Classes](#classes)
+- [Typedefs](#typedefs)
+- [StudioHelper](#studiohelper)
+  - [new StudioHelper(settings)](#new-studiohelpersettings)
+  - [studioHelper.login(username, password, token, \[longSession\]) ⇒ Promise](#studiohelperloginusername-password-token-longsession--promise)
+  - [studioHelper.updateSessionSetting(setting, value)](#studiohelperupdatesessionsettingsetting-value)
+  - [studioHelper.resetSessionSettings()](#studiohelperresetsessionsettings)
+  - [studioHelper.push(settings) ⇒ Array.\<Object\>](#studiohelperpushsettings--arrayobject)
+  - [studioHelper.createDirectoryFolders(folderData) ⇒ Array.\<ResultObj\>](#studiohelpercreatedirectoryfoldersfolderdata--arrayresultobj)
+  - [studioHelper.getLocalFolders(path) ⇒ Array.\<string\>](#studiohelpergetlocalfolderspath--arraystring)
+  - [studioHelper.getFiles(folderId) ⇒ Promise.\<Array.\<Object\>\>](#studiohelpergetfilesfolderid--promisearrayobject)
+  - [studioHelper.deleteFiles(files, options) ⇒ Promise.\<Object\>](#studiohelperdeletefilesfiles-options--promiseobject)
+  - [studioHelper.uploadFiles(files, folderId) ⇒ Promise.\<Array.\<Object\>\>](#studiohelperuploadfilesfiles-folderid--promisearrayobject)
+  - [studioHelper.replaceFiles(files, \[options\]) ⇒ Promise.\<Array.\<Object\>\>](#studiohelperreplacefilesfiles-options--promisearrayobject)
+  - [studioHelper.getFileHeaders(fileId) ⇒ ResultObj](#studiohelpergetfileheadersfileid--resultobj)
+  - [studioHelper.setFileHeaders(fileId, headerSettings, \[options\]) ⇒ ResultObj](#studiohelpersetfileheadersfileid-headersettings-options--resultobj)
+  - [studioHelper.getUploadInformation(files, folderId) ⇒ Array.\<Object\>](#studiohelpergetuploadinformationfiles-folderid--arrayobject)
+  - [studioHelper.getReplaceInformation(files, options)](#studiohelpergetreplaceinformationfiles-options)
+  - [studioHelper.getFolders(\[parentId\]) ⇒ Promise.\<Object\>](#studiohelpergetfoldersparentid--promiseobject)
+  - [studioHelper.createFolder(settings) ⇒ ResultObj](#studiohelpercreatefoldersettings--resultobj)
+  - [studioHelper.deleteFolder(folderId) ⇒ Promise.\<Object\>](#studiohelperdeletefolderfolderid--promiseobject)
+  - [studioHelper.deleteChildFolders(folderId) ⇒ Promise.\<Object\>](#studiohelperdeletechildfoldersfolderid--promiseobject)
+  - [studioHelper.getFolderSettings(folderId) ⇒ ResultObj](#studiohelpergetfoldersettingsfolderid--resultobj)
+  - [studioHelper.updateFolderSettings(folderId, folderSettings, \[options\]) ⇒ ResultObj](#studiohelperupdatefoldersettingsfolderid-foldersettings-options--resultobj)
+  - [studioHelper.batchUpload(files) ⇒ Array.\<object\>](#studiohelperbatchuploadfiles--arrayobject)
+- [ResultObj : Object](#resultobj--object)
+- [ProgressOptions](#progressoptions)
+- [FileHeaderSettings : Object](#fileheadersettings--object)
+- [CreateFolderResult : Object](#createfolderresult--object)
+- [FolderSettings : Object](#foldersettings--object)
+- [FolderUpdateSettings : Object](#folderupdatesettings--object)
 
 <a name="new_StudioHelper_new"></a>
 
@@ -88,6 +98,27 @@ Login
 | token | <code>string</code> |  | 
 | [longSession] | <code>int</code> | <code>1</code> | 
 
+<a name="StudioHelper+updateSessionSetting"></a>
+
+### studioHelper.updateSessionSetting(setting, value)
+Update a single setting for this session
+
+See documentation for available settings.
+
+**Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
+**See**: [ Documentation](https://labs.crasman.fi/fi/help/studio/studioapi/studioapiresource/put-apisettings-setting-value/)  
+
+| Param | Type |
+| --- | --- |
+| setting | <code>string</code> | 
+| value | <code>string</code> | 
+
+<a name="StudioHelper+resetSessionSettings"></a>
+
+### studioHelper.resetSessionSettings()
+Reset all API settings to default values
+
+**Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
 <a name="StudioHelper+push"></a>
 
 ### studioHelper.push(settings) ⇒ <code>Array.&lt;Object&gt;</code>
