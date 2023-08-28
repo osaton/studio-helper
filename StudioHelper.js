@@ -810,6 +810,26 @@ class StudioHelper {
   }
 
   /**
+   * Update a single setting for this session
+   *
+   * See documentation for available settings.
+   *
+   * @see {@link https://labs.crasman.fi/fi/help/studio/studioapi/studioapiresource/put-apisettings-setting-value/ | Documentation}
+   */
+  updateAPISetting(setting, value) {
+    return this._put(`apisettings/${setting}/${value}`);
+  }
+
+  /**
+   * Reset all API settings to default values
+   *
+   * @returns
+   */
+  resetAPISettings() {
+    return this._put('apisettings/reset');
+  }
+
+  /**
    * Push changes to Studio
    *
    * @example

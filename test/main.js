@@ -123,6 +123,25 @@ describe('StudioHelper', function() {
     })
   });
 
+  describe('#resetAPISettings', function () {
+    it('should reset API settings', async function () {
+      const res = await studio.resetAPISettings();
+      res.status.should.equal('ok');
+    });
+  });
+
+  describe('#updateAPISetting', function () {
+    after(async () => {
+      const res = await studio.resetAPISettings();
+      res.status.should.equal('ok');
+    });
+
+    it('should update API settings', async () =>  {
+      const res = await studio.updateAPISetting('pubURL', 1);
+      res.status.should.equal('ok');
+    });
+  });
+
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {
