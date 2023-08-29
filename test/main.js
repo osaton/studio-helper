@@ -1008,7 +1008,7 @@ describe('StudioHelper', function() {
     });
   })
 
-  describe('#getFiles', function () {
+  describe.only('#getFiles', function () {
     before(async () => {
       const files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
 
@@ -1034,9 +1034,10 @@ describe('StudioHelper', function() {
       await studio.updateSessionSetting('conversions', 1);
 
       // Give some time for first conversions to be created
+      // There is still a chance that this fails, if you don't have empty conversion queue.
       await sleep(1000);
 
-      const res = await studio.getFiles(mainFolder);
+      let res = await studio.getFiles(mainFolder);
 
       res.should.have.lengthOf(2);
       res[0].should.have.property('details');
@@ -1045,6 +1046,20 @@ describe('StudioHelper', function() {
 
       res[0].conversions[0].should.have.property('quicktag').which.is.a.String();
       res[0].conversions[0].should.have.property('externalURL').which.is.a.String();
+
+      // ===
+      // Versionize
+      // ===
+
+      // Should not have `fv` query param by default
+      res[0].externalURL.should.not.match(/\?fv=\w+$/);
+      res[0].conversions[0].externalURL.should.not.match(/\?fv=\w+$/);
+      await studio.updateSessionSetting('versionize', 1);
+
+      res = await studio.getFiles(mainFolder);
+      // Should end with E.g. `?fv=ab21g`
+      res[0].externalURL.should.match(/\?fv=\w+$/);
+      res[0].conversions[0].externalURL.should.match(/\?fv=\w+$/);
     });
   });
 
