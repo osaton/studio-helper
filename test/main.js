@@ -1008,7 +1008,7 @@ describe('StudioHelper', function() {
     });
   })
 
-  describe.only('#getFiles', function () {
+  describe('#getFiles', function () {
     before(async () => {
       const files = [path.join(getFolder('folders/testfolder1'), 'file1.js'), path.join(getFolder('folders/testfolder1'), 'file-2.js')];
 
