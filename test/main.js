@@ -199,6 +199,16 @@ describe('StudioHelper', function() {
     });
   })
 
+  describe('#getConversions', () => {
+    it('should get conversions', async () => {
+      const res = await studio.getConversions();
+      console.log(res);
+      res.status.should.equal('ok');
+      res.result.should.be.an.Array();
+      // No further tests as it requires setting up Studio instance
+    });
+  })
+
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {

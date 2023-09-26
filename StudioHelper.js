@@ -875,6 +875,13 @@ class StudioHelper {
   }
 
   /**
+   * Get list of all conversions
+   */
+  getConversions() {
+    return this._get('conversions');
+  }
+
+  /**
    * Push changes to Studio
    *
    * @example
