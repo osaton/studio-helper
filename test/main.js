@@ -190,6 +190,15 @@ describe('StudioHelper', function() {
     });
   })
 
+  describe('#getMetadataFields', () => {
+    it('should get metadata fields', async () => {
+      const res = await studio.getMetadataFields();
+      res.status.should.equal('ok');
+      res.result.should.be.an.Array();
+      // No further tests as it requires setting up a Stage instamce which might not be available
+    });
+  })
+
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {

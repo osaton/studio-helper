@@ -843,6 +843,38 @@ class StudioHelper {
   }
 
   /**
+   * Get all metadata fields defined in Stage for this Studio
+   *
+   * @example return value
+   * ```js
+   * // {
+   * //   "status": "ok",
+   * //   "result": [
+   * //     {
+   * //       "id": "my_table",
+   * //       "fields": [
+   * //         {
+   * //           "id": "my_field",
+   * //           "type": "st",
+   * //           "names": {
+   * //             "en": "My field"
+   * //           }
+   * //         }
+   * //       ],
+   * //       "languages": [
+   * //         "en"
+   * //       ]
+   * //     }
+   * //   ],
+   * //   "code": 0
+   * // }
+   * ```
+   */
+  getMetadataFields() {
+    return this._get('metadatafields');
+  }
+
+  /**
    * Push changes to Studio
    *
    * @example
