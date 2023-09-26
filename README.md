@@ -8,6 +8,8 @@
 ## Typedefs
 
 <dl>
+<dt><a href="#ApiResponse<T>">ApiResponse<T></a> : <code>Object</code></dt>
+<dd></dd>
 <dt><a href="#ResultObj">ResultObj</a> : <code>Object</code></dt>
 <dd></dd>
 <dt><a href="#ProgressOptions">ProgressOptions</a></dt>
@@ -35,6 +37,9 @@
   - [studioHelper.login(username, password, token, \[longSession\]) ⇒ Promise](#studiohelperloginusername-password-token-longsession--promise)
   - [studioHelper.updateSessionSetting(setting, value)](#studiohelperupdatesessionsettingsetting-value)
   - [studioHelper.resetSessionSettings()](#studiohelperresetsessionsettings)
+  - [studioHelper.getAllFolders(\[limit\], \[offset\]) ⇒ Promise.\<ApiResponse.\<Array.\<{id: string, name: string, parentId: (null|string), createdAt: number, modifiedAt: number}\>\>\>](#studiohelpergetallfolderslimit-offset--promiseapiresponsearrayid-string-name-string-parentid-nullstring-createdat-number-modifiedat-number)
+  - [studioHelper.getMetadataFields() ⇒ Promise.\<ApiResponse.\<Array.\<{id: string, fields: {id: string, type: string, names: Object}, languages: Array.\<string\>}\>\>\>](#studiohelpergetmetadatafields--promiseapiresponsearrayid-string-fields-id-string-type-string-names-object-languages-arraystring)
+  - [studioHelper.getConversions() ⇒ Promise.\<ApiResponse.\<Array.\<{id: string, name: string}\>\>\>](#studiohelpergetconversions--promiseapiresponsearrayid-string-name-string)
   - [studioHelper.push(settings) ⇒ Array.\<Object\>](#studiohelperpushsettings--arrayobject)
   - [studioHelper.createDirectoryFolders(folderData) ⇒ Array.\<ResultObj\>](#studiohelpercreatedirectoryfoldersfolderdata--arrayresultobj)
   - [studioHelper.getLocalFolders(path) ⇒ Array.\<string\>](#studiohelpergetlocalfolderspath--arraystring)
@@ -53,6 +58,7 @@
   - [studioHelper.getFolderSettings(folderId) ⇒ ResultObj](#studiohelpergetfoldersettingsfolderid--resultobj)
   - [studioHelper.updateFolderSettings(folderId, folderSettings, \[options\]) ⇒ ResultObj](#studiohelperupdatefoldersettingsfolderid-foldersettings-options--resultobj)
   - [studioHelper.batchUpload(files) ⇒ Array.\<object\>](#studiohelperbatchuploadfiles--arrayobject)
+- [ApiResponse : Object](#apiresponse--object)
 - [ResultObj : Object](#resultobj--object)
 - [ProgressOptions](#progressoptions)
 - [FileHeaderSettings : Object](#fileheadersettings--object)
@@ -119,6 +125,67 @@ See documentation for available settings.
 Reset all API settings to default values
 
 **Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
+<a name="StudioHelper+getAllFolders"></a>
+
+### studioHelper.getAllFolders([limit], [offset]) ⇒ <code>Promise.&lt;ApiResponse.&lt;Array.&lt;{id: string, name: string, parentId: (null\|string), createdAt: number, modifiedAt: number}&gt;&gt;&gt;</code>
+Get all folders in Studio
+
+**Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [limit] | <code>number</code> | <code>1000</code> | Max number of folders to return. Max 1000, default 1000. |
+| [offset] | <code>number</code> | <code>0</code> | Offset |
+
+<a name="StudioHelper+getMetadataFields"></a>
+
+### studioHelper.getMetadataFields() ⇒ <code>Promise.&lt;ApiResponse.&lt;Array.&lt;{id: string, fields: {id: string, type: string, names: Object}, languages: Array.&lt;string&gt;}&gt;&gt;&gt;</code>
+Get all metadata fields defined in Stage for this Studio
+
+**Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
+**Example**  
+return value
+```js
+// {
+//   "status": "ok",
+//   "result": [
+//     {
+//       "id": "my_table",
+//       "fields": [
+//         {
+//           "id": "my_field",
+//           "type": "st",
+//           "names": {
+//             "en": "My field"
+//           }
+//         }
+//       ],
+//       "languages": [
+//         "en"
+//       ]
+//     }
+//   ],
+//   "code": 0
+// }
+```
+<a name="StudioHelper+getConversions"></a>
+
+### studioHelper.getConversions() ⇒ <code>Promise.&lt;ApiResponse.&lt;Array.&lt;{id: string, name: string}&gt;&gt;&gt;</code>
+**Kind**: instance method of [<code>StudioHelper</code>](#StudioHelper)  
+**Example**  
+return value
+```js
+// {
+//   "status": "ok",
+//   "result": [
+//     {
+//       "id": "my_conversion",
+//       "name": "My conversion",
+//     }
+//   ],
+//   "code": 0
+// }
+```
 <a name="StudioHelper+push"></a>
 
 ### studioHelper.push(settings) ⇒ <code>Array.&lt;Object&gt;</code>
@@ -395,6 +462,18 @@ Batch upload/replace files
 | Param | Type |
 | --- | --- |
 | files | <code>Array.&lt;object&gt;</code> | 
+
+<a name="ApiResponse<T>"></a>
+
+## ApiResponse<T> : <code>Object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| status | <code>string</code> | "ok" or "error" |
+| code | <code>number</code> | 0 for success |
+| result | <code>T</code> | Results |
 
 <a name="ResultObj"></a>
 

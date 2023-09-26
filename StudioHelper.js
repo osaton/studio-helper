@@ -26,6 +26,14 @@ const API_URL = '/studioapi/v2/',
       LONG_SESSION = 1;
 
 /**
+ * @typedef {Object} ApiResponse<T>
+ * @property {string} status "ok" or "error"
+ * @property {number} code 0 for success
+ * @property {T} result Results
+ * @template {Object} T
+ */
+
+/**
  * @example
  * var StudioHelper = require('studio-helper'),
  *     studio = new StudioHelper({
@@ -837,6 +845,7 @@ class StudioHelper {
    *
    * @param {number} [limit=1000] - Max number of folders to return. Max 1000, default 1000.
    * @param {number} [offset=0] - Offset
+   * @returns {Promise<ApiResponse<Array<{id: string, name: string, parentId: null | string, createdAt: number, modifiedAt: number}>>>}
    */
   getAllFolders(limit = 1000, offset = 0) {
     return this._get('allfolders', limit, offset);
@@ -845,6 +854,7 @@ class StudioHelper {
   /**
    * Get all metadata fields defined in Stage for this Studio
    *
+   * @returns {Promise<ApiResponse<Array<{id: string, fields: { id: string, type: string, names: Object}, languages: Array<string>}>>>}
    * @example return value
    * ```js
    * // {
@@ -875,7 +885,8 @@ class StudioHelper {
   }
 
   /**
-   * Get list of all conversions
+   *
+   * @returns {Promise<ApiResponse<Array<{id: string, name: string}>>>}
    *
    * @example return value
    * ```js
