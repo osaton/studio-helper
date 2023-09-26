@@ -876,6 +876,20 @@ class StudioHelper {
 
   /**
    * Get list of all conversions
+   *
+   * @example return value
+   * ```js
+   * // {
+   * //   "status": "ok",
+   * //   "result": [
+   * //     {
+   * //       "id": "my_conversion",
+   * //       "name": "My conversion",
+   * //     }
+   * //   ],
+   * //   "code": 0
+   * // }
+   * ```
    */
   getConversions() {
     return this._get('conversions');
