@@ -146,6 +146,50 @@ describe('StudioHelper', function() {
     });
   });
 
+  describe('#getAllFolders', () => {
+    before(function () {
+      // create push folder
+      return studio.createFolder({
+        'parentId': mainFolder,
+        'name': 'getAllFolders-test'
+      }).then(function (res) {
+        return res.status.should.equal('ok');
+      });
+    });
+
+    it('should get all folders', async () => {
+      const res = await studio.getAllFolders();
+      res.status.should.equal('ok');
+      res.result.should.be.an.Array();
+      // We should have at least the main test folder and the folder we just created
+      res.result.length.should.be.above(1);
+      const item = res.result[0];
+      item.should.have.property('id');
+      item.should.have.property('name');
+      item.should.have.property('parentId');
+      item.should.have.property('createdAt');
+      item.should.have.property('modifiedAt');
+    });
+
+    it('should be able to limit how many folders are included per request', async () => {
+      const res = await studio.getAllFolders(1);
+      res.status.should.equal('ok');
+      res.result.should.be.an.Array();
+      res.result.length.should.equal(1);
+    });
+
+    it('should be able to set offset', async () => {
+      const [res1, res2] = await Promise.all([studio.getAllFolders(1, 0), studio.getAllFolders(1, 1)]);
+      res1.status.should.equal('ok');
+      res1.result.should.be.an.Array();
+      res1.result.length.should.equal(1);
+      res2.status.should.equal('ok');
+      res2.result.should.be.an.Array();
+      res2.result.length.should.equal(1);
+      res1.result[0].id.should.not.equal(res2.result[0].id);
+    });
+  })
+
 
   describe('#getUploadInformation', function () {
     it('should return information needed for upload', function () {

@@ -831,6 +831,17 @@ class StudioHelper {
     return this._put('apisettings/reset');
   }
 
+
+  /**
+   * Get all folders in Studio
+   *
+   * @param {number} [limit=1000] - Max number of folders to return. Max 1000, default 1000.
+   * @param {number} [offset=0] - Offset
+   */
+  getAllFolders(limit = 1000, offset = 0) {
+    return this._get('allfolders', limit, offset);
+  }
+
   /**
    * Push changes to Studio
    *
