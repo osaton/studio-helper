@@ -1,3 +1,11 @@
+# Archived Repository
+
+## Repository Archived and Moved
+
+This repository has been **archived** and is no longer actively maintained. The project has been moved to a **private repository**.
+
+However, the related **npm package is still available** and can be accessed and used as before: `npm install studio-helper`
+
 ## Classes
 
 <dl>
